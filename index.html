@@ -307,7 +307,7 @@
   <aside class="panel" id="panel">
     <div class="grab"></div>
     <h1>하단 띠배너 플로팅 강조</h1>
-    <p class="sub">화면 진입 시: 허공에 등장 → 그라데이션 강조 → 원위치 도킹.</p>
+    <p class="sub">화면 진입 시 플로팅으로 등장·유지 → 화면을 터치/스크롤하면 도킹.</p>
     <div class="grp2">
       <label>등장 방식</label>
       <div class="seg" id="mode">
@@ -324,7 +324,7 @@
       </div>
     </div>
     <button class="replay" id="replay">▶ 다시 재생</button>
-    <div class="tl"><b>타임라인 (1x)</b><br>① 등장 0–300ms<br>② 강조 300–1100ms<br>③ 도킹 1100–1500ms</div>
+    <div class="tl"><b>동작</b><br>① 등장(슬라이드업)<br>② 플로팅 유지 · 쉬머 반복<br>③ 화면 터치·스크롤 시 도킹</div>
   </aside>
 </div>
 
@@ -334,12 +334,32 @@
 
 <script>
   const bar = document.getElementById('infobar');
-  let mode='B', speed=1, curEntrance=null;
+  let mode='B', speed=1, curEntrance=null, disarmDock=null;
   function applySpeed(){
     document.documentElement.style.setProperty('--dock-dur',(0.42/speed)+'s');
     document.documentElement.style.setProperty('--grad-dur',(1.6/speed)+'s');
   }
+  function dock(){
+    if(disarmDock){ disarmDock(); disarmDock=null; }
+    bar.classList.remove('floating');   // 플로팅 → 도킹
+  }
+  // 플로팅 유지 상태에서, 첫 사용자 상호작용(터치/클릭/스크롤/휠)에 도킹
+  function armDock(){
+    if(disarmDock) disarmDock();
+    const scroller=document.querySelector('.scroll');
+    const phone=document.querySelector('.phone');
+    const trigger=()=>dock();
+    scroller.addEventListener('scroll',trigger,{passive:true,once:true});
+    phone.addEventListener('pointerdown',trigger,{once:true});
+    phone.addEventListener('wheel',trigger,{passive:true,once:true});
+    disarmDock=()=>{
+      scroller.removeEventListener('scroll',trigger);
+      phone.removeEventListener('pointerdown',trigger);
+      phone.removeEventListener('wheel',trigger);
+    };
+  }
   function play(){
+    if(disarmDock){ disarmDock(); disarmDock=null; }
     if(curEntrance) curEntrance.cancel();
     bar.classList.remove('floating');
     bar.style.transition='none'; bar.style.opacity='0'; bar.style.transform='none';
@@ -353,7 +373,7 @@
     curEntrance.onfinish=()=>{
       curEntrance.cancel(); curEntrance=null;
       bar.style.opacity='1'; bar.style.transform='none';
-      setTimeout(()=>bar.classList.remove('floating'), 1000/speed);
+      armDock();   // 자동 도킹 없음 — 유지하다가 상호작용 시 도킹
     };
   }
   document.getElementById('mode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;mode=b.dataset.mode;document.querySelectorAll('#mode button').forEach(x=>x.classList.toggle('on',x===b));play();});
