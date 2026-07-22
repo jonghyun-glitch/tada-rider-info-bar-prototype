@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>타다 예약 · 하단 띠배너 강조 프로토타입</title>
+<style>
+  :root{
+    color-scheme: light;
+    --blue-50:#e2f2fe;
+    --blue-600:#0086EA;
+    --gray-800:#383d4f;
+    --navy:#19254d;
+    --muted:#8a93a3;
+    --cta-h:92px;
+    --float-gap:24px;
+    --dock-dur:.42s;
+    --grad-dur:1.6s;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    background:#eef1f5;color:#1c2430;-webkit-font-smoothing:antialiased;
+  }
+
+  .stage{min-height:100dvh;display:flex;align-items:center;justify-content:center;gap:40px;padding:24px;flex-wrap:wrap;}
+
+  /* ---------- phone ---------- */
+  .phone{
+    width:360px;height:720px;background:#fff;border-radius:36px;
+    box-shadow:0 24px 60px rgba(20,30,55,.22);border:1px solid #e6eaf0;
+    position:relative;overflow:hidden;flex:0 0 auto;
+  }
+  .statusbar{height:36px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 20px;font-size:12px;font-weight:600;}
+  .appbar{display:flex;align-items:center;gap:8px;padding:6px 16px 14px;}
+  .appbar .back{font-size:20px;}
+  .appbar .title{flex:1;text-align:center;}
+  .appbar .title .t1{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px;margin:0 auto;}
+  .appbar .title .t2{font-size:12px;color:var(--muted);margin-top:2px;}
+  .content{padding:16px 20px;}
+  .sec-label{font-size:16px;font-weight:800;margin:6px 0 14px;}
+  .cars{display:flex;gap:14px;justify-content:center;margin-bottom:22px;}
+  .car{width:84px;height:84px;border-radius:50%;background:#f1f4f8;display:flex;align-items:center;justify-content:center;font-size:30px;position:relative;}
+  .car.sel{outline:3px solid var(--blue-600);background:#eaf4ff;}
+  .car.sel::after{content:"✓";position:absolute;top:-4px;right:-4px;width:22px;height:22px;border-radius:50%;background:var(--blue-600);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;}
+  .cartitle{text-align:center;font-size:20px;font-weight:800;}
+  .carprice{text-align:center;font-size:16px;font-weight:700;margin-top:6px;}
+  .carmeta{text-align:center;font-size:12px;color:var(--muted);margin-top:8px;}
+  .divider{height:8px;background:#f4f6f9;margin:20px -20px;}
+  .svc-title{font-size:15px;font-weight:800;margin-bottom:10px;}
+  .svc{border:1px solid #eceff3;border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+  .svc .ic{width:42px;height:42px;border-radius:10px;background:#f1f4f8;display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto;}
+  .svc .tx b{font-size:14px;}
+  .svc .tx p{margin:2px 0 0;font-size:12px;color:var(--muted);}
+
+  .bottom{
+    position:absolute;left:0;right:0;bottom:0;min-height:var(--cta-h);
+    background:#fff;border-top:1px solid #eef1f5;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 20px;padding-bottom:env(safe-area-inset-bottom,0px);z-index:2;
+  }
+  .bottom .fare .l{font-size:12px;color:var(--muted);}
+  .bottom .fare .p{font-size:20px;font-weight:800;margin-top:2px;}
+  .bottom .next{background:var(--navy);color:#fff;font-size:16px;font-weight:700;border:none;border-radius:12px;padding:14px 34px;}
+
+  /* ---------- info bar ---------- */
+  .infobar{
+    position:absolute;left:0;right:0;bottom:calc(var(--cta-h) + env(safe-area-inset-bottom,0px));
+    height:38px;display:flex;align-items:center;justify-content:center;
+    background:var(--blue-50);border-radius:0;box-shadow:none;overflow:hidden;z-index:4;opacity:0;
+    transition:left var(--dock-dur) cubic-bezier(.4,0,.2,1),right var(--dock-dur) cubic-bezier(.4,0,.2,1),
+      bottom var(--dock-dur) cubic-bezier(.4,0,.2,1),border-radius var(--dock-dur) cubic-bezier(.4,0,.2,1),
+      box-shadow var(--dock-dur) cubic-bezier(.4,0,.2,1);
+  }
+  .ib-grad{position:absolute;inset:0;background-size:220% 100%;opacity:0;transition:opacity var(--dock-dur) ease;}
+  .ib-text{position:relative;z-index:1;font-size:13px;line-height:18px;color:var(--gray-800);transition:color var(--dock-dur) ease;white-space:nowrap;}
+  .ib-text b{color:var(--blue-600);font-weight:700;transition:color var(--dock-dur) ease;}
+  .infobar.floating{
+    left:16px;right:16px;bottom:calc(var(--cta-h) + env(safe-area-inset-bottom,0px) + var(--float-gap));
+    border-radius:12px;box-shadow:0 10px 26px rgba(0,90,180,.28);
+  }
+  .infobar.floating .ib-grad{opacity:1;animation:gradFlow var(--grad-dur) linear infinite;}
+  .infobar.floating .ib-text,.infobar.floating .ib-text b{color:#fff;}
+  @keyframes gradFlow{0%{background-position:0% 50%;}100%{background-position:220% 50%;}}
+  @media (prefers-reduced-motion:reduce){
+    .infobar.floating .ib-grad{animation:none;}
+  }
+
+  /* ---------- controls ---------- */
+  .panel{width:320px;flex:0 0 auto;}
+  .panel h1{font-size:18px;margin:0 0 4px;}
+  .panel .sub{font-size:13px;color:#6b7482;margin:0 0 20px;line-height:1.5;}
+  .grp{margin-bottom:18px;}
+  .grp>label{display:block;font-size:12px;font-weight:700;color:#6b7482;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;}
+  .seg{display:flex;background:#e3e8ef;border-radius:10px;padding:3px;gap:3px;}
+  .seg button{flex:1;border:none;background:transparent;padding:10px 6px;border-radius:8px;font-size:13px;font-weight:600;color:#5a6373;cursor:pointer;}
+  .seg button.on{background:#fff;color:#1c2430;box-shadow:0 1px 3px rgba(0,0,0,.12);}
+  .swatches{display:flex;gap:10px;}
+  .sw{width:52px;height:34px;border-radius:8px;cursor:pointer;border:2px solid transparent;}
+  .sw.on{border-color:#1c2430;}
+  .replay{width:100%;background:var(--navy);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;}
+  .replay:active{transform:translateY(1px);}
+  .tl{margin-top:20px;font-size:12px;color:var(--muted);line-height:1.9;}
+  .tl b{color:#5a6373;}
+
+  /* ---------- mobile FAB + sheet ---------- */
+  .fab{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:14px;z-index:30;
+    width:44px;height:44px;border-radius:50%;border:none;background:rgba(25,37,77,.9);color:#fff;font-size:20px;
+    box-shadow:0 6px 18px rgba(20,30,55,.28);cursor:pointer;backdrop-filter:blur(4px);}
+  .scrim{display:none;}
+
+  @media (max-width:899px){
+    body{background:#fff;}
+    .stage{display:block;padding:0;min-height:0;}
+    .phone{width:100vw;height:100dvh;border-radius:0;border:none;box-shadow:none;}
+    .statusbar{padding-top:env(safe-area-inset-top,0px);height:calc(36px + env(safe-area-inset-top,0px));}
+    .fab{display:flex;align-items:center;justify-content:center;}
+    .scrim{display:block;position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:38;opacity:0;pointer-events:none;transition:opacity .25s;}
+    .scrim.open{opacity:1;pointer-events:auto;}
+    .panel{
+      position:fixed;left:0;right:0;bottom:0;z-index:40;width:auto;
+      background:#fff;border-radius:20px 20px 0 0;padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));
+      box-shadow:0 -12px 40px rgba(20,30,55,.25);
+      transform:translateY(110%);transition:transform .3s cubic-bezier(.32,.72,0,1);
+    }
+    .panel.open{transform:translateY(0);}
+    .panel .grab{width:40px;height:4px;border-radius:2px;background:#d3d9e2;margin:0 auto 14px;}
+  }
+  @media (min-width:900px){ .panel .grab{display:none;} }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone">
+    <div class="statusbar"><span>12:45</span><span>●●● ⌁ ▮</span></div>
+    <div class="appbar">
+      <span class="back">←</span>
+      <div class="title">
+        <div class="t1">신세계백화점 강남점, 인천공항 제 1터…</div>
+        <div class="t2">3.5 오후 14:30</div>
+      </div>
+      <span style="width:20px"></span>
+    </div>
+    <div class="content">
+      <div class="sec-label">차량 선택</div>
+      <div class="cars">
+        <div class="car sel">🚐</div>
+        <div class="car">🚙</div>
+        <div class="car">🚐</div>
+      </div>
+      <div class="cartitle">넓고 쾌적한 넥스트</div>
+      <div class="carprice">125,000원</div>
+      <div class="carmeta">👤 최대 5인 탑승</div>
+      <div class="divider"></div>
+      <div class="svc-title">부가 서비스</div>
+      <div class="svc"><div class="ic">🧑‍✈️</div><div class="tx"><b>드라이버 지정</b><p>N명의 마이 드라이버 중 운행할 드라이버를 지정합니다 · 3,000원</p></div></div>
+      <div class="svc"><div class="ic">🧸</div><div class="tx"><b>카시트 1개</b><p>0세부터 이용하는 카시트 1개 · 5,000원</p></div></div>
+    </div>
+
+    <div class="infobar" id="infobar">
+      <div class="ib-grad"></div>
+      <span class="ib-text">⚡ 넥스트 호출 시 <b>100% 예약 확정</b></span>
+    </div>
+
+    <div class="bottom">
+      <div class="fare"><div class="l">예상 요금</div><div class="p">125,000원</div></div>
+      <button class="next">다음</button>
+    </div>
+  </div>
+
+  <aside class="panel" id="panel">
+    <div class="grab"></div>
+    <h1>하단 띠배너 플로팅 강조</h1>
+    <p class="sub">화면 진입 시: 허공에 등장 → 그라데이션 강조 → 원위치 도킹.</p>
+
+    <div class="grp">
+      <label>등장 방식</label>
+      <div class="seg" id="mode">
+        <button data-mode="A" class="on">A · 페이드+팝</button>
+        <button data-mode="B">B · 슬라이드업</button>
+      </div>
+    </div>
+    <div class="grp">
+      <label>속도</label>
+      <div class="seg" id="speed">
+        <button data-speed="0.75">0.75x</button>
+        <button data-speed="1" class="on">1x</button>
+        <button data-speed="1.5">1.5x</button>
+      </div>
+    </div>
+    <div class="grp">
+      <label>그라데이션 프리셋</label>
+      <div class="swatches" id="grad">
+        <div class="sw on" data-i="0" style="background:linear-gradient(100deg,#0086EA,#22d3ee)"></div>
+        <div class="sw" data-i="1" style="background:linear-gradient(100deg,#19254d,#0086EA)"></div>
+        <div class="sw" data-i="2" style="background:linear-gradient(100deg,#4F6BED,#22d3ee)"></div>
+      </div>
+    </div>
+    <button class="replay" id="replay">▶ 다시 재생</button>
+    <div class="tl"><b>타임라인 (1x)</b><br>① 등장 0–300ms<br>② 강조 300–1100ms<br>③ 도킹 1100–1500ms</div>
+  </aside>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<button class="fab" id="fab" aria-label="컨트롤 열기">⚙</button>
+
+<script>
+  const bar = document.getElementById('infobar');
+  const grad = bar.querySelector('.ib-grad');
+  let mode='A', speed=1, curEntrance=null;
+  const GRADS=[
+    'linear-gradient(100deg,#0086EA 0%,#3aa8f5 30%,#22d3ee 55%,#3aa8f5 78%,#0086EA 100%)',
+    'linear-gradient(100deg,#19254d 0%,#0d5fb8 40%,#0086EA 70%,#2aa5f2 100%)',
+    'linear-gradient(100deg,#4F6BED 0%,#3a8ff0 45%,#22d3ee 80%,#4F6BED 100%)'
+  ];
+  function applySpeed(){
+    document.documentElement.style.setProperty('--dock-dur',(0.42/speed)+'s');
+    document.documentElement.style.setProperty('--grad-dur',(1.6/speed)+'s');
+  }
+  function play(){
+    if(curEntrance) curEntrance.cancel();
+    bar.classList.remove('floating');
+    bar.style.transition='none'; bar.style.opacity='0'; bar.style.transform='none';
+    void bar.offsetWidth;
+    bar.classList.add('floating'); void bar.offsetWidth; bar.style.transition='';
+    const dur = mode==='A' ? 300/speed : 380/speed;
+    const kf = mode==='A'
+      ? [{opacity:0,transform:'scale(.96)'},{opacity:1,transform:'scale(1)'}]
+      : [{opacity:0,transform:'translateY(24px)'},{opacity:1,transform:'translateY(0)'}];
+    curEntrance = bar.animate(kf,{duration:dur,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+    curEntrance.onfinish=()=>{
+      curEntrance.cancel(); curEntrance=null;
+      bar.style.opacity='1'; bar.style.transform='none';
+      setTimeout(()=>bar.classList.remove('floating'), 800/speed);
+    };
+  }
+  document.getElementById('mode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;mode=b.dataset.mode;document.querySelectorAll('#mode button').forEach(x=>x.classList.toggle('on',x===b));play();});
+  document.getElementById('speed').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;speed=parseFloat(b.dataset.speed);document.querySelectorAll('#speed button').forEach(x=>x.classList.toggle('on',x===b));applySpeed();play();});
+  document.getElementById('grad').addEventListener('click',e=>{const s=e.target.closest('.sw');if(!s)return;document.querySelectorAll('#grad .sw').forEach(x=>x.classList.toggle('on',x===s));grad.style.background=GRADS[+s.dataset.i];grad.style.backgroundSize='220% 100%';play();});
+  document.getElementById('replay').addEventListener('click',play);
+
+  const panel=document.getElementById('panel'), scrim=document.getElementById('scrim');
+  function openSheet(){panel.classList.add('open');scrim.classList.add('open');}
+  function closeSheet(){panel.classList.remove('open');scrim.classList.remove('open');}
+  document.getElementById('fab').addEventListener('click',openSheet);
+  scrim.addEventListener('click',closeSheet);
+
+  applySpeed();
+  grad.style.background=GRADS[0]; grad.style.backgroundSize='220% 100%';
+  window.addEventListener('load',()=>setTimeout(play,400));
+</script>
+</body>
+</html>
