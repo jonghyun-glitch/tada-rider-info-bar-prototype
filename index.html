@@ -118,7 +118,8 @@
   .infobar.floating{left:16px;right:16px;bottom:calc(var(--cta-h) + env(safe-area-inset-bottom,0px) + var(--float-gap));
     border-radius:9999px;box-shadow:0 8px 24px rgba(50,162,250,.15), 0 2px 8px rgba(0,0,0,.06);}
   .infobar.floating{padding:13px 24px;}
-  .infobar.floating .ib-text{font-size:17px;line-height:23px;font-weight:500;white-space:normal;word-break:keep-all;text-wrap:balance;max-width:260px;}
+  .infobar.floating .ib-text{font-size:17px;line-height:23px;font-weight:500;white-space:normal;word-break:keep-all;max-width:260px;}
+  .infobar.floating .ib-nb{white-space:nowrap;}
   .infobar.floating .ib-grad{opacity:1;}
   .infobar.floating .ib-shimmer{animation:shimmer var(--grad-dur) linear infinite;}
   .infobar.floating .ib-text,.infobar.floating .ib-text b{color:#fff;}
@@ -295,7 +296,7 @@
     <!-- info bar -->
     <div class="infobar" id="infobar">
       <div class="ib-grad"><div class="ib-shimmer"></div></div>
-      <span class="ib-text">🔥 이 날은 예약이 평소 대비 <b>n배</b> 몰리고 있어요</span>
+      <span class="ib-text">🔥&nbsp;이 날은 예약이 <span class="ib-nb">평소&nbsp;대비 <b>n배</b>&nbsp;몰리고 있어요</span></span>
     </div>
 
     <!-- bottom price -->
