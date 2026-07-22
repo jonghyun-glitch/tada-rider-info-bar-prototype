@@ -116,7 +116,7 @@
     background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,var(--shim-peak)) 50%, transparent 100%);}
   .ib-text{position:relative;z-index:1;font-size:13px;line-height:18px;color:var(--gray-800);text-align:center;white-space:nowrap;transition:color var(--dock-dur) ease,font-size var(--dock-dur) ease,line-height var(--dock-dur) ease;}
   .ib-text b{font-weight:700;color:var(--blue-600);transition:color var(--dock-dur) ease;}
-  .infobar.floating{left:16px;right:16px;bottom:calc(var(--cta-h) + env(safe-area-inset-bottom,0px) + var(--float-gap));
+  .infobar.floating{left:32px;right:32px;bottom:calc(var(--cta-h) + env(safe-area-inset-bottom,0px) + var(--float-gap));
     border-radius:var(--float-radius);box-shadow:0 8px 24px rgba(50,162,250,.15), 0 2px 8px rgba(0,0,0,.06);}
   .infobar.floating{padding:13px 24px;}
   .infobar.floating .ib-text{font-size:17px;line-height:23px;font-weight:500;white-space:normal;word-break:keep-all;max-width:260px;}
@@ -312,13 +312,6 @@
     <h1>하단 띠배너 플로팅 강조</h1>
     <p class="sub">화면 진입 시 플로팅으로 등장·유지 → 화면을 터치/스크롤하면 도킹.</p>
     <div class="grp2">
-      <label>등장 방식</label>
-      <div class="seg" id="mode">
-        <button data-mode="A">A · 페이드+팝</button>
-        <button data-mode="B" class="on">B · 슬라이드업</button>
-      </div>
-    </div>
-    <div class="grp2">
       <label>속도</label>
       <div class="seg" id="speed">
         <button data-speed="0.75">0.75x</button>
@@ -394,7 +387,6 @@
       armDock();   // 자동 도킹 없음 — 유지하다가 상호작용 시 도킹
     };
   }
-  document.getElementById('mode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;mode=b.dataset.mode;document.querySelectorAll('#mode button').forEach(x=>x.classList.toggle('on',x===b));play();});
   document.getElementById('speed').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;speed=parseFloat(b.dataset.speed);document.querySelectorAll('#speed button').forEach(x=>x.classList.toggle('on',x===b));applySpeed();play();});
   document.getElementById('replay').addEventListener('click',play);
   document.getElementById('replayFab').addEventListener('click',play);
