@@ -13,6 +13,7 @@
     --gray-600:#60667a; --gray-500:#73788b; --gray-300:#9da0ae; --gray-100:#d5d7dc;
     --gray-80:#e3e4e8; --gray-30:#f5f6f7; --navy:#19254d;
     --cta-h:88px; --float-gap:20px; --dock-dur:.42s; --grad-dur:1.6s;
+    --float-radius:9999px; --shim-w:90px; --shim-peak:.35; --shim-x0:-120px; --shim-x1:460px;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -111,19 +112,19 @@
     background:
       linear-gradient(to bottom, rgba(255,255,255,.2) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0) 100%),
       linear-gradient(154.68deg, #0094F9 0%, #32A2FA 100%);}
-  .ib-shimmer{position:absolute;top:0;bottom:0;left:0;width:90px;transform:translateX(-120px);
-    background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.35) 50%, transparent 100%);}
+  .ib-shimmer{position:absolute;top:0;bottom:0;left:0;width:var(--shim-w);transform:translateX(var(--shim-x0));
+    background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,var(--shim-peak)) 50%, transparent 100%);}
   .ib-text{position:relative;z-index:1;font-size:13px;line-height:18px;color:var(--gray-800);text-align:center;white-space:nowrap;transition:color var(--dock-dur) ease,font-size var(--dock-dur) ease,line-height var(--dock-dur) ease;}
   .ib-text b{font-weight:700;color:var(--blue-600);transition:color var(--dock-dur) ease;}
   .infobar.floating{left:16px;right:16px;bottom:calc(var(--cta-h) + env(safe-area-inset-bottom,0px) + var(--float-gap));
-    border-radius:9999px;box-shadow:0 8px 24px rgba(50,162,250,.15), 0 2px 8px rgba(0,0,0,.06);}
+    border-radius:var(--float-radius);box-shadow:0 8px 24px rgba(50,162,250,.15), 0 2px 8px rgba(0,0,0,.06);}
   .infobar.floating{padding:13px 24px;}
   .infobar.floating .ib-text{font-size:17px;line-height:23px;font-weight:500;white-space:normal;word-break:keep-all;max-width:260px;}
   .infobar.floating .ib-nb{white-space:nowrap;}
   .infobar.floating .ib-grad{opacity:1;}
   .infobar.floating .ib-shimmer{animation:shimmer var(--grad-dur) linear infinite;}
   .infobar.floating .ib-text,.infobar.floating .ib-text b{color:#fff;}
-  @keyframes shimmer{0%{transform:translateX(-120px);}100%{transform:translateX(440px);}}
+  @keyframes shimmer{0%{transform:translateX(var(--shim-x0));}100%{transform:translateX(var(--shim-x1));}}
   @media (prefers-reduced-motion:reduce){.infobar.floating .ib-shimmer{animation:none;}}
 
   /* bottom price area */
@@ -325,6 +326,21 @@
         <button data-speed="1.5">1.5x</button>
       </div>
     </div>
+    <div class="grp2">
+      <label>코너</label>
+      <div class="seg" id="corner">
+        <button data-r="9999" class="on">캡슐</button>
+        <button data-r="12">라운드 12</button>
+      </div>
+    </div>
+    <div class="grp2">
+      <label>쉬머(흰색 하이라이트)</label>
+      <div class="seg" id="shimmer">
+        <button data-s="sharp">선명</button>
+        <button data-s="default" class="on">기본</button>
+        <button data-s="soft">은은·넓게</button>
+      </div>
+    </div>
     <button class="replay" id="replay">▶ 다시 재생</button>
     <div class="tl"><b>동작</b><br>① 등장(슬라이드업)<br>② 플로팅 유지 · 쉬머 반복<br>③ 화면 터치·스크롤 시 도킹</div>
   </aside>
@@ -382,6 +398,22 @@
   document.getElementById('speed').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;speed=parseFloat(b.dataset.speed);document.querySelectorAll('#speed button').forEach(x=>x.classList.toggle('on',x===b));applySpeed();play();});
   document.getElementById('replay').addEventListener('click',play);
   document.getElementById('replayFab').addEventListener('click',play);
+
+  // 코너 레디우스 (캡슐 9999 ↔ 라운드 12)
+  document.getElementById('corner').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    document.querySelectorAll('#corner button').forEach(x=>x.classList.toggle('on',x===b));
+    document.documentElement.style.setProperty('--float-radius',b.dataset.r+'px');play();});
+  // 쉬머 조절 (너비/피크opacity/이동거리)
+  const SHIM={
+    sharp:{w:'60px',peak:'.45',x0:'-90px',x1:'440px'},
+    default:{w:'90px',peak:'.35',x0:'-120px',x1:'460px'},
+    soft:{w:'220px',peak:'.16',x0:'-260px',x1:'540px'}
+  };
+  document.getElementById('shimmer').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    document.querySelectorAll('#shimmer button').forEach(x=>x.classList.toggle('on',x===b));
+    const c=SHIM[b.dataset.s], r=document.documentElement.style;
+    r.setProperty('--shim-w',c.w);r.setProperty('--shim-peak',c.peak);r.setProperty('--shim-x0',c.x0);r.setProperty('--shim-x1',c.x1);
+    play();});
 
   const panel=document.getElementById('panel'), scrim=document.getElementById('scrim');
   document.getElementById('fab').addEventListener('click',()=>{panel.classList.add('open');scrim.classList.add('open');});
