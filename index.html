@@ -106,9 +106,13 @@
   .tl b{color:#5a6373;}
 
   /* ---------- mobile FAB + sheet ---------- */
-  .fab{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:14px;z-index:30;
-    width:44px;height:44px;border-radius:50%;border:none;background:rgba(25,37,77,.9);color:#fff;font-size:20px;
-    box-shadow:0 6px 18px rgba(20,30,55,.28);cursor:pointer;backdrop-filter:blur(4px);}
+  .fab,.replay-fab{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:30;
+    width:44px;height:44px;border-radius:50%;border:none;color:#fff;
+    box-shadow:0 6px 18px rgba(20,30,55,.28);cursor:pointer;backdrop-filter:blur(4px);
+    align-items:center;justify-content:center;}
+  .fab{right:14px;background:rgba(25,37,77,.9);font-size:20px;}
+  .replay-fab{right:68px;background:rgba(0,134,234,.94);font-size:22px;}
+  .replay-fab:active{transform:scale(.92);}
   .scrim{display:none;}
 
   @media (max-width:899px){
@@ -116,7 +120,7 @@
     .stage{display:block;padding:0;min-height:0;}
     .phone{width:100vw;height:100dvh;border-radius:0;border:none;box-shadow:none;}
     .statusbar{padding-top:env(safe-area-inset-top,0px);height:calc(36px + env(safe-area-inset-top,0px));}
-    .fab{display:flex;align-items:center;justify-content:center;}
+    .fab,.replay-fab{display:flex;}
     .scrim{display:block;position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:38;opacity:0;pointer-events:none;transition:opacity .25s;}
     .scrim.open{opacity:1;pointer-events:auto;}
     .panel{
@@ -204,6 +208,7 @@
 </div>
 
 <div class="scrim" id="scrim"></div>
+<button class="replay-fab" id="replayFab" aria-label="다시 재생">↻</button>
 <button class="fab" id="fab" aria-label="컨트롤 열기">⚙</button>
 
 <script>
@@ -240,6 +245,7 @@
   document.getElementById('speed').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;speed=parseFloat(b.dataset.speed);document.querySelectorAll('#speed button').forEach(x=>x.classList.toggle('on',x===b));applySpeed();play();});
   document.getElementById('grad').addEventListener('click',e=>{const s=e.target.closest('.sw');if(!s)return;document.querySelectorAll('#grad .sw').forEach(x=>x.classList.toggle('on',x===s));grad.style.background=GRADS[+s.dataset.i];grad.style.backgroundSize='220% 100%';play();});
   document.getElementById('replay').addEventListener('click',play);
+  document.getElementById('replayFab').addEventListener('click',play);
 
   const panel=document.getElementById('panel'), scrim=document.getElementById('scrim');
   function openSheet(){panel.classList.add('open');scrim.classList.add('open');}
