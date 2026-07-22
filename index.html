@@ -74,18 +74,25 @@
       bottom var(--dock-dur) cubic-bezier(.4,0,.2,1),border-radius var(--dock-dur) cubic-bezier(.4,0,.2,1),
       box-shadow var(--dock-dur) cubic-bezier(.4,0,.2,1);
   }
-  .ib-grad{position:absolute;inset:0;background-size:220% 100%;opacity:0;transition:opacity var(--dock-dur) ease;}
+  /* 강조 배경 = FloatingLiveButton 컴포넌트 스펙 (베이스 그라디언트 + 흰색 오버레이) */
+  .ib-grad{position:absolute;inset:0;overflow:hidden;opacity:0;transition:opacity var(--dock-dur) ease;
+    background:
+      linear-gradient(to bottom, rgba(255,255,255,.2) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0) 100%),
+      linear-gradient(154.68deg, #0094F9 0%, #32A2FA 100%);}
+  .ib-shimmer{position:absolute;top:0;bottom:0;left:0;width:90px;transform:translateX(-120px);
+    background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.35) 50%, transparent 100%);}
   .ib-text{position:relative;z-index:1;font-size:13px;line-height:18px;color:var(--gray-800);transition:color var(--dock-dur) ease;white-space:nowrap;}
   .ib-text b{color:var(--blue-600);font-weight:700;transition:color var(--dock-dur) ease;}
   .infobar.floating{
     left:16px;right:16px;bottom:calc(var(--cta-h) + env(safe-area-inset-bottom,0px) + var(--float-gap));
-    border-radius:12px;box-shadow:0 10px 26px rgba(0,90,180,.28);
+    border-radius:9999px;box-shadow:0 8px 24px rgba(50,162,250,.15), 0 2px 8px rgba(0,0,0,.06);
   }
-  .infobar.floating .ib-grad{opacity:1;animation:gradFlow var(--grad-dur) linear infinite;}
+  .infobar.floating .ib-grad{opacity:1;}
+  .infobar.floating .ib-shimmer{animation:shimmer var(--grad-dur) linear infinite;}
   .infobar.floating .ib-text,.infobar.floating .ib-text b{color:#fff;}
-  @keyframes gradFlow{0%{background-position:0% 50%;}100%{background-position:220% 50%;}}
+  @keyframes shimmer{0%{transform:translateX(-120px);}100%{transform:translateX(440px);}}
   @media (prefers-reduced-motion:reduce){
-    .infobar.floating .ib-grad{animation:none;}
+    .infobar.floating .ib-shimmer{animation:none;}
   }
 
   /* ---------- controls ---------- */
@@ -164,7 +171,7 @@
     </div>
 
     <div class="infobar" id="infobar">
-      <div class="ib-grad"></div>
+      <div class="ib-grad"><div class="ib-shimmer"></div></div>
       <span class="ib-text">⚡ 넥스트 호출 시 <b>100% 예약 확정</b></span>
     </div>
 
@@ -182,8 +189,8 @@
     <div class="grp">
       <label>등장 방식</label>
       <div class="seg" id="mode">
-        <button data-mode="A" class="on">A · 페이드+팝</button>
-        <button data-mode="B">B · 슬라이드업</button>
+        <button data-mode="A">A · 페이드+팝</button>
+        <button data-mode="B" class="on">B · 슬라이드업</button>
       </div>
     </div>
     <div class="grp">
@@ -192,14 +199,6 @@
         <button data-speed="0.75">0.75x</button>
         <button data-speed="1" class="on">1x</button>
         <button data-speed="1.5">1.5x</button>
-      </div>
-    </div>
-    <div class="grp">
-      <label>그라데이션 프리셋</label>
-      <div class="swatches" id="grad">
-        <div class="sw on" data-i="0" style="background:linear-gradient(100deg,#0086EA,#22d3ee)"></div>
-        <div class="sw" data-i="1" style="background:linear-gradient(100deg,#19254d,#0086EA)"></div>
-        <div class="sw" data-i="2" style="background:linear-gradient(100deg,#4F6BED,#22d3ee)"></div>
       </div>
     </div>
     <button class="replay" id="replay">▶ 다시 재생</button>
@@ -213,13 +212,7 @@
 
 <script>
   const bar = document.getElementById('infobar');
-  const grad = bar.querySelector('.ib-grad');
-  let mode='A', speed=1, curEntrance=null;
-  const GRADS=[
-    'linear-gradient(100deg,#0086EA 0%,#3aa8f5 30%,#22d3ee 55%,#3aa8f5 78%,#0086EA 100%)',
-    'linear-gradient(100deg,#19254d 0%,#0d5fb8 40%,#0086EA 70%,#2aa5f2 100%)',
-    'linear-gradient(100deg,#4F6BED 0%,#3a8ff0 45%,#22d3ee 80%,#4F6BED 100%)'
-  ];
+  let mode='B', speed=1, curEntrance=null;
   function applySpeed(){
     document.documentElement.style.setProperty('--dock-dur',(0.42/speed)+'s');
     document.documentElement.style.setProperty('--grad-dur',(1.6/speed)+'s');
@@ -238,12 +231,11 @@
     curEntrance.onfinish=()=>{
       curEntrance.cancel(); curEntrance=null;
       bar.style.opacity='1'; bar.style.transform='none';
-      setTimeout(()=>bar.classList.remove('floating'), 800/speed);
+      setTimeout(()=>bar.classList.remove('floating'), 1000/speed);
     };
   }
   document.getElementById('mode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;mode=b.dataset.mode;document.querySelectorAll('#mode button').forEach(x=>x.classList.toggle('on',x===b));play();});
   document.getElementById('speed').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;speed=parseFloat(b.dataset.speed);document.querySelectorAll('#speed button').forEach(x=>x.classList.toggle('on',x===b));applySpeed();play();});
-  document.getElementById('grad').addEventListener('click',e=>{const s=e.target.closest('.sw');if(!s)return;document.querySelectorAll('#grad .sw').forEach(x=>x.classList.toggle('on',x===s));grad.style.background=GRADS[+s.dataset.i];grad.style.backgroundSize='220% 100%';play();});
   document.getElementById('replay').addEventListener('click',play);
   document.getElementById('replayFab').addEventListener('click',play);
 
@@ -254,7 +246,6 @@
   scrim.addEventListener('click',closeSheet);
 
   applySpeed();
-  grad.style.background=GRADS[0]; grad.style.backgroundSize='220% 100%';
   window.addEventListener('load',()=>setTimeout(play,400));
 </script>
 </body>
