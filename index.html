@@ -15,6 +15,7 @@
     --cta-h:88px; --float-gap:24px; --dock-dur:.42s; --grad-dur:1.6s;
     --float-radius:9999px; --float-side:16px;
     --shim-w:155px; --shim-peak:.25; --shim-x0:-190px; --shim-x1:500px;
+    --fl-fs:17px; --fl-fw:500;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -124,7 +125,7 @@
   .infobar.floating{left:var(--float-side);right:var(--float-side);bottom:calc(var(--cta-h) + env(safe-area-inset-bottom,0px) + var(--float-gap));
     border-radius:var(--float-radius);box-shadow:0 8px 24px rgba(50,162,250,.15), 0 2px 8px rgba(0,0,0,.06);}
   .infobar.floating{padding:13px 24px;}
-  .infobar.floating .ib-text{font-size:17px;line-height:23px;font-weight:500;white-space:normal;word-break:keep-all;max-width:260px;}
+  .infobar.floating .ib-text{font-size:var(--fl-fs);line-height:1.38;font-weight:var(--fl-fw);white-space:normal;word-break:keep-all;max-width:260px;}
   .infobar.floating .ib-nb{white-space:nowrap;}
   .infobar.floating .ib-grad{opacity:1;}
   .infobar.floating .ib-shimmer{animation:shimmer var(--grad-dur) linear infinite;}
@@ -458,6 +459,13 @@
     <h1>하단 띠배너 플로팅 강조</h1>
     <p class="sub">화면 진입 시 플로팅으로 등장·유지 → 화면을 터치/스크롤하면 도킹.</p>
     <div class="grp2">
+      <label>버전 (넛지 위계·타이포)</label>
+      <div class="seg" id="version">
+        <button data-v="cur" class="on">현재</button>
+        <button data-v="adj">조정</button>
+      </div>
+    </div>
+    <div class="grp2">
       <label>속도</label>
       <div class="seg" id="speed">
         <button data-speed="0.75">0.75x</button>
@@ -578,6 +586,25 @@
   document.getElementById('botm').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
     document.querySelectorAll('#botm button').forEach(x=>x.classList.toggle('on',x===b));
     document.documentElement.style.setProperty('--float-gap',b.dataset.m+'px');play();});
+  // 버전 프리셋: 현재 vs 조정(위계·타이포 개선)
+  function setSeg(id,attr,val){document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x.dataset[attr]===val));}
+  const VER={
+    cur:{r:'9999',side:'16',bot:'24',shim:'mid',fs:'17px',fw:'500'},
+    adj:{r:'12',  side:'16',bot:'16',shim:'soft',fs:'15px',fw:'400'}
+  };
+  function applyVersion(v){
+    const c=VER[v], rs=document.documentElement.style, s=SHIM[c.shim];
+    rs.setProperty('--float-radius',c.r+'px');
+    rs.setProperty('--float-side',c.side+'px');
+    rs.setProperty('--float-gap',c.bot+'px');
+    rs.setProperty('--shim-w',s.w);rs.setProperty('--shim-peak',s.peak);rs.setProperty('--shim-x0',s.x0);rs.setProperty('--shim-x1',s.x1);
+    rs.setProperty('--fl-fs',c.fs);rs.setProperty('--fl-fw',c.fw);
+    setSeg('corner','r',c.r);setSeg('sidem','m',c.side);setSeg('botm','m',c.bot);setSeg('shimmer','s',c.shim);
+    play();
+  }
+  document.getElementById('version').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    document.querySelectorAll('#version button').forEach(x=>x.classList.toggle('on',x===b));
+    applyVersion(b.dataset.v);});
 
   const panel=document.getElementById('panel'), scrim=document.getElementById('scrim');
   document.getElementById('fab').addEventListener('click',()=>{panel.classList.add('open');scrim.classList.add('open');});
