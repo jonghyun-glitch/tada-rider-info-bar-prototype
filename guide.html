@@ -261,6 +261,13 @@
 <span class="tok-p">.info-bar.is-floating .txt</span>{ font-size:15px; color:#fff; }
 <span class="tok-p">.info-bar.is-floating .txt b</span>{ color:#fff; }
 
+<span class="tok-c">/* 쉬머 — 흰색 하이라이트 좌→우 sweep. DOM: .grad &gt; .shim */</span>
+<span class="tok-p">.info-bar .shim</span>{ position:absolute; top:0; bottom:0; left:0; width:155px; transform:translateX(-190px);
+  background:<span class="tok-k">linear-gradient</span>(90deg, transparent, rgba(255,255,255,.25), transparent); }
+<span class="tok-p">.info-bar.is-floating .shim</span>{ animation:shimmer 1.6s linear infinite; }
+<span class="tok-k">@keyframes</span> shimmer{ 0%{ transform:translateX(-190px); } 100%{ transform:translateX(500px); } }
+<span class="tok-k">@media</span> (prefers-reduced-motion:reduce){ <span class="tok-p">.info-bar.is-floating .shim</span>{ animation:none; } }
+
 <span class="tok-c">/* z-index: CTA 바가 배너 위 → 뒤에서 슬라이드업 */</span>
 <span class="tok-p">.cta-bar</span>{ z-index:5; }</code></pre></div>
 
@@ -330,6 +337,23 @@
     }
   }
 }
+
+<span class="tok-c">// 쉬머 — 플로팅 그라데이션 위에 .overlay(ShimmerOverlay()) 로 겹침</span>
+<span class="tok-k">struct</span> <span class="tok-n">ShimmerOverlay</span>: <span class="tok-n">View</span> {
+  <span class="tok-k">@State</span> <span class="tok-k">private</span> <span class="tok-k">var</span> x: <span class="tok-n">CGFloat</span> = -<span class="tok-n">1</span>
+  <span class="tok-k">var</span> body: <span class="tok-k">some</span> <span class="tok-n">View</span> {
+    <span class="tok-n">GeometryReader</span> { geo <span class="tok-k">in</span>
+      <span class="tok-n">LinearGradient</span>(colors: [.clear, .white.opacity(<span class="tok-n">0.25</span>), .clear],
+                     startPoint: .leading, endPoint: .trailing)
+        .frame(width: <span class="tok-n">155</span>)
+        .offset(x: x * geo.size.width)
+        .onAppear {
+          withAnimation(.linear(duration: <span class="tok-n">1.6</span>).repeatForever(autoreverses: <span class="tok-k">false</span>)) { x = <span class="tok-n">1.4</span> }
+        }
+    }
+    .allowsHitTesting(<span class="tok-k">false</span>)   <span class="tok-c">// 터치 통과</span>
+  }
+}
 <span class="tok-c">// 스크롤/탭 제스처에서 state = .docked 로 도킹</span></code></pre></div>
         </div>
 
@@ -368,6 +392,21 @@
       color = <span class="tok-k">if</span> (floating) <span class="tok-n">Color</span>.White <span class="tok-k">else</span> <span class="tok-n">Color</span>(<span class="tok-s">0xFF383D4F</span>)
     )
   }
+}
+
+<span class="tok-c">// 쉬머 — 플로팅 배경 위에 .overlay 로 겹침</span>
+<span class="tok-k">@Composable</span>
+<span class="tok-k">fun</span> <span class="tok-n">ShimmerOverlay</span>(modifier: <span class="tok-n">Modifier</span> = <span class="tok-n">Modifier</span>) {
+  <span class="tok-k">val</span> t = rememberInfiniteTransition()
+  <span class="tok-k">val</span> p <span class="tok-k">by</span> t.animateFloat(<span class="tok-n">0f</span>, <span class="tok-n">1f</span>, infiniteRepeatable(tween(<span class="tok-n">1600</span>, easing = <span class="tok-n">LinearEasing</span>)))
+  <span class="tok-n">Box</span>(modifier.fillMaxSize().drawWithContent {
+    drawContent()
+    <span class="tok-k">val</span> w = <span class="tok-n">155</span>.dp.toPx()
+    <span class="tok-k">val</span> startX = -w + p * (size.width + <span class="tok-n">2</span> * w)
+    drawRect(<span class="tok-n">Brush</span>.horizontalGradient(
+      <span class="tok-n">0f</span> to <span class="tok-n">Color</span>.Transparent, <span class="tok-n">0.5f</span> to <span class="tok-n">Color</span>.White.copy(alpha = <span class="tok-n">.25f</span>), <span class="tok-n">1f</span> to <span class="tok-n">Color</span>.Transparent,
+      startX = startX, endX = startX + w))
+  })
 }
 <span class="tok-c">// 진입: appeared=true(슬라이드업) → 580ms 후 state=Floating. 스크롤/탭 시 state=Docked</span></code></pre></div>
         </div>
