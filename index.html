@@ -590,7 +590,7 @@
   function setSeg(id,attr,val){document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x.dataset[attr]===val));}
   const VER={
     cur:{r:'9999',side:'16',bot:'24',shim:'mid',fs:'17px',fw:'500'},
-    adj:{r:'12',  side:'16',bot:'16',shim:'soft',fs:'15px',fw:'400'}
+    adj:{r:'8',   side:'16',bot:'16',shim:'soft',fs:'15px',fw:'400'}
   };
   function applyVersion(v){
     const c=VER[v], rs=document.documentElement.style, s=SHIM[c.shim];
