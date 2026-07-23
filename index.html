@@ -113,7 +113,7 @@
     padding:10px 12px;background:var(--blue-50);border-radius:0;box-shadow:none;overflow:hidden;z-index:4;opacity:0;
     transition:left var(--dock-dur) cubic-bezier(.4,0,.2,1),right var(--dock-dur) cubic-bezier(.4,0,.2,1),
       bottom var(--dock-dur) cubic-bezier(.4,0,.2,1),border-radius var(--dock-dur) cubic-bezier(.4,0,.2,1),
-      box-shadow var(--dock-dur) cubic-bezier(.4,0,.2,1);}
+      box-shadow var(--dock-dur) cubic-bezier(.4,0,.2,1),opacity .2s ease;}
   .ib-grad{position:absolute;inset:0;overflow:hidden;opacity:0;transition:opacity var(--dock-dur) ease;
     background:linear-gradient(90deg, #0094F9 0%, #32A2FA 100%);}
   .ib-shimmer{position:absolute;top:0;bottom:0;left:0;width:var(--shim-w);transform:translateX(var(--shim-x0));
@@ -504,7 +504,7 @@
       </div>
     </div>
     <button class="replay" id="replay">▶ 다시 재생</button>
-    <div class="tl"><b>동작</b><br>① 등장(슬라이드업)<br>② 플로팅 유지 · 쉬머 반복<br>③ 화면 터치·스크롤 시 도킹</div>
+    <div class="tl"><b>동작</b><br>① 진입: 도킹 → 플로팅 전환<br>② 플로팅 유지 · 쉬머 반복<br>③ 화면 터치·스크롤 시 도킹</div>
   </aside>
 </div>
 
@@ -514,7 +514,7 @@
 
 <script>
   const bar = document.getElementById('infobar');
-  let mode='B', speed=1, curEntrance=null, disarmDock=null;
+  let mode='B', speed=1, curEntrance=null, disarmDock=null, morphTimer=null, armTimer=null;
   function applySpeed(){
     document.documentElement.style.setProperty('--dock-dur',(0.42/speed)+'s');
     document.documentElement.style.setProperty('--grad-dur',(1.6/speed)+'s');
@@ -538,23 +538,19 @@
       phone.removeEventListener('wheel',trigger);
     };
   }
+  // 매 진입: 도킹 상태로 등장 → 플로팅으로 전환(모프). 첫 진입/복귀 동일. (타이머+CSS 기반)
   function play(){
     if(disarmDock){ disarmDock(); disarmDock=null; }
-    if(curEntrance) curEntrance.cancel();
-    bar.classList.remove('floating');
-    bar.style.transition='none'; bar.style.opacity='0'; bar.style.transform='none';
+    clearTimeout(morphTimer); clearTimeout(armTimer);
+    bar.classList.remove('floating');                 // 도킹 상태로 스냅
+    bar.style.transition='none'; bar.style.transform='none'; bar.style.opacity='0';
     void bar.offsetWidth;
-    bar.classList.add('floating'); void bar.offsetWidth; bar.style.transition='';
-    const dur = mode==='A' ? 300/speed : 380/speed;
-    const kf = mode==='A'
-      ? [{opacity:0,transform:'scale(.96)'},{opacity:1,transform:'scale(1)'}]
-      : [{opacity:0,transform:'translateY(24px)'},{opacity:1,transform:'translateY(0)'}];
-    curEntrance = bar.animate(kf,{duration:dur,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
-    curEntrance.onfinish=()=>{
-      curEntrance.cancel(); curEntrance=null;
-      bar.style.opacity='1'; bar.style.transform='none';
-      armDock();   // 자동 도킹 없음 — 유지하다가 상호작용 시 도킹
-    };
+    bar.style.transition='';                          // CSS 트랜지션 복원(opacity .2s 포함)
+    bar.style.opacity='1';                            // 도킹 스트립 페이드인
+    morphTimer=setTimeout(()=>{
+      bar.classList.add('floating');                  // 도킹 → 플로팅 (CSS transition)
+      armTimer=setTimeout(armDock,(0.42/speed)*1000+80);
+    }, 360/speed);
   }
   document.getElementById('speed').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;speed=parseFloat(b.dataset.speed);document.querySelectorAll('#speed button').forEach(x=>x.classList.toggle('on',x===b));applySpeed();play();});
   document.getElementById('replay').addEventListener('click',play);
