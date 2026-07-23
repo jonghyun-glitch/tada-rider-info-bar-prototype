@@ -54,8 +54,9 @@
   .pill .p2{font-size:13px;line-height:18px;color:var(--gray-600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
   /* scroll body */
-  .scroll{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  .scroll{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;
     padding-bottom:calc(var(--cta-h) + 38px + var(--float-gap) + env(safe-area-inset-bottom,0px) + 8px);}
+  .scroll::-webkit-scrollbar{width:0;height:0;display:none;}
 
   /* 차량 선택 */
   .lineup{padding:24px 0;}
