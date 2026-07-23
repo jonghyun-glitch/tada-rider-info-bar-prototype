@@ -14,7 +14,7 @@
     --gray-80:#e3e4e8; --gray-30:#f5f6f7; --gray-400:#868b9c; --navy:#19254d; --navy-50:#e6e9ef;
     --cta-h:88px; --float-gap:16px; --dock-dur:.42s; --grad-dur:1.6s;
     --float-radius:8px; --float-side:16px;
-    --shim-w:220px; --shim-peak:.16; --shim-x0:-260px; --shim-x1:540px;
+    --shim-w:155px; --shim-peak:.25; --shim-x0:-190px; --shim-x1:500px;
     --fl-fs:15px; --fl-fw:400;
   }
   *{box-sizing:border-box;}
@@ -465,8 +465,8 @@
     <div class="grp2">
       <label>속도</label>
       <div class="seg" id="speed">
-        <button data-speed="0.75">0.75x</button>
-        <button data-speed="1" class="on">1x</button>
+        <button data-speed="0.75" class="on">0.75x</button>
+        <button data-speed="1">1x</button>
         <button data-speed="1.5">1.5x</button>
       </div>
     </div>
@@ -499,8 +499,8 @@
       <div class="seg" id="shimmer">
         <button data-s="sharp">선명</button>
         <button data-s="default">기본</button>
-        <button data-s="mid">중간</button>
-        <button data-s="soft" class="on">은은·넓게</button>
+        <button data-s="mid" class="on">중간</button>
+        <button data-s="soft">은은·넓게</button>
       </div>
     </div>
     <button class="replay" id="replay">▶ 다시 재생</button>
@@ -514,7 +514,7 @@
 
 <script>
   const bar = document.getElementById('infobar');
-  let mode='B', speed=1, curEntrance=null, disarmDock=null, morphTimer=null, armTimer=null;
+  let mode='B', speed=0.75, curEntrance=null, disarmDock=null, morphTimer=null, armTimer=null;
   function applySpeed(){
     document.documentElement.style.setProperty('--dock-dur',(0.42/speed)+'s');
     document.documentElement.style.setProperty('--grad-dur',(1.6/speed)+'s');
@@ -586,7 +586,7 @@
   function setSeg(id,attr,val){document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x.dataset[attr]===val));}
   const VER={
     cur:{r:'9999',side:'16',bot:'24',shim:'mid',fs:'17px',fw:'500'},
-    adj:{r:'8',   side:'16',bot:'16',shim:'soft',fs:'15px',fw:'400'}
+    adj:{r:'8',   side:'16',bot:'16',shim:'mid',fs:'15px',fw:'400'}
   };
   function applyVersion(v){
     const c=VER[v], rs=document.documentElement.style, s=SHIM[c.shim];
