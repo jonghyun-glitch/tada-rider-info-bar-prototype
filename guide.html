@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>개발 가이드 · 예약 넛지 띠배너 (info_bar)</title>
+<style>
+  :root{
+    --accent:#0086ea; --g1:#0094f9; --g2:#32a2fa; --navy:#19254d;
+    --blue-50:#e2f2fe; --blue-600:#0086ea;
+    --ink:#171a24; --g900:#262a38; --g700:#4b5064; --g600:#60667a; --g500:#73788b; --g300:#9da0ae;
+    --line:#e7eaef; --card:#ffffff; --bg:#f5f7fa; --code:#0f1524;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--g900);-webkit-font-smoothing:antialiased;line-height:1.6;}
+  a{color:var(--accent);text-decoration:none;}
+  code{font-family:var(--mono);}
+
+  .top{background:#fff;border-bottom:1px solid var(--line);padding:22px 28px;position:sticky;top:0;z-index:20;}
+  .top .kick{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;}
+  .top h1{margin:4px 0 2px;font-size:22px;color:var(--ink);}
+  .top .sub{font-size:14px;color:var(--g600);}
+
+  .wrap{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:360px 1fr;gap:36px;padding:36px 28px 120px;}
+
+  /* left live preview */
+  .preview{position:sticky;top:112px;height:max-content;}
+  .phone{width:320px;background:#fff;border:1px solid var(--line);border-radius:26px;overflow:hidden;box-shadow:0 18px 44px rgba(20,30,55,.14);position:relative;}
+  .scr{position:relative;height:360px;background:#fff;overflow:hidden;}
+  .scr .content{position:absolute;left:0;right:0;top:0;bottom:96px;background:linear-gradient(180deg,#fff, #fff 62%, #f4f6f9);}
+  .scr .content .ph{height:14px;background:#eef1f5;border-radius:7px;margin:22px 20px;}
+  .scr .content .ph.s{width:44%;} .scr .content .ph.m{width:70%;}
+  .scr .cta{position:absolute;left:0;right:0;bottom:0;height:96px;background:#fff;border-top:1px solid #eef1f5;z-index:5;
+    display:flex;align-items:center;justify-content:space-between;padding:0 20px;}
+  .scr .cta .l{font-size:12px;color:var(--g500);} .scr .cta .p{font-size:16px;font-weight:800;color:#000;margin-top:2px;}
+  .scr .cta .next{background:var(--navy);color:#fff;font-weight:700;border:none;border-radius:4px;padding:12px 24px;font-size:15px;}
+  .ibar{position:absolute;left:0;right:0;bottom:96px;z-index:4;display:flex;align-items:center;justify-content:center;gap:4px;
+    padding:10px 12px;background:var(--blue-50);overflow:hidden;opacity:0;
+    transition:left .56s cubic-bezier(.4,0,.2,1),right .56s cubic-bezier(.4,0,.2,1),bottom .56s cubic-bezier(.4,0,.2,1),
+      border-radius .56s cubic-bezier(.4,0,.2,1),box-shadow .56s cubic-bezier(.4,0,.2,1),transform .56s cubic-bezier(.4,0,.2,1),opacity .18s;}
+  .ibar .grad{position:absolute;inset:0;overflow:hidden;opacity:0;transition:opacity .56s ease;background:linear-gradient(90deg,var(--g1),var(--g2));}
+  .ibar .grad::after{content:"";position:absolute;top:0;bottom:0;left:0;width:150px;transform:translateX(-190px);
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);}
+  .ibar .t{position:relative;z-index:1;font-size:13px;color:var(--g800,#383d4f);white-space:nowrap;transition:color .56s,font-size .56s;}
+  .ibar .t b{color:var(--blue-600);font-weight:700;transition:color .56s;}
+  .ibar.float{left:16px;right:16px;bottom:calc(96px + 16px);border-radius:8px;
+    box-shadow:0 8px 24px rgba(50,162,250,.28),0 2px 8px rgba(0,0,0,.06);}
+  .ibar.float .grad{opacity:1;} .ibar.float .grad::after{animation:shim 1.15s linear infinite;}
+  .ibar.float .t{color:#fff;font-size:15px;} .ibar.float .t b{color:#fff;}
+  @keyframes shim{to{transform:translateX(320px);}}
+  .pvbtns{display:flex;gap:8px;margin-top:14px;}
+  .pvbtn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--g700);cursor:pointer;}
+  .pvbtn.pri{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .pvcap{margin-top:10px;font-size:12px;color:var(--g500);}
+
+  /* right docs */
+  .docs{min-width:0;}
+  .docs section{scroll-margin-top:110px;margin-bottom:44px;}
+  .docs h2{font-size:20px;color:var(--ink);margin:0 0 4px;padding-top:6px;}
+  .docs h2 .n{color:var(--g300);font-size:14px;font-weight:700;margin-right:8px;}
+  .docs .lead{color:var(--g600);font-size:14.5px;margin:0 0 18px;}
+  .docs h3{font-size:15px;color:var(--g900);margin:22px 0 10px;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+  .card .ct{font-size:12px;font-weight:800;letter-spacing:.03em;color:var(--g500);text-transform:uppercase;margin-bottom:10px;}
+  .kv{display:flex;gap:10px;font-size:13.5px;padding:5px 0;border-top:1px dashed #eef0f4;}
+  .kv:first-of-type{border-top:none;}
+  .kv .k{color:var(--g600);flex:0 0 92px;} .kv .v{color:var(--g900);flex:1;font-variant-numeric:tabular-nums;}
+  .kv .v code{background:#f1f3f7;border-radius:5px;padding:1px 6px;font-size:12.5px;color:var(--g900);}
+  .chip{display:inline-block;background:#eef2f7;color:var(--g700);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;margin:0 6px 6px 0;}
+
+  ul.tl{list-style:none;padding:0;margin:0;counter-reset:s;}
+  ul.tl li{position:relative;padding:10px 0 10px 42px;border-top:1px solid var(--line);font-size:14px;}
+  ul.tl li:first-child{border-top:none;}
+  ul.tl li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:9px;width:26px;height:26px;border-radius:50%;
+    background:var(--blue-50);color:var(--accent);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;}
+  ul.tl li b{color:var(--g900);} ul.tl li .mut{color:var(--g500);}
+
+  .note{background:#fff8ec;border:1px solid #f3e3bf;border-radius:10px;padding:12px 14px;font-size:13.5px;color:#7a5c14;}
+  .note b{color:#5f4708;}
+
+  /* code */
+  .codewrap{position:relative;margin:12px 0;}
+  .codehead{display:flex;align-items:center;justify-content:space-between;background:#182034;border:1px solid #232c44;border-bottom:none;border-radius:10px 10px 0 0;padding:8px 12px;}
+  .codehead .lang{color:#9fb0d0;font-size:12px;font-weight:700;font-family:var(--mono);}
+  .copy{background:#26314c;color:#cfe0ff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;}
+  .copy.done{background:#1f7a4d;color:#fff;}
+  pre{margin:0;background:var(--code);border:1px solid #232c44;border-radius:0 0 10px 10px;padding:16px;overflow-x:auto;}
+  pre code{color:#d7e0f2;font-size:12.5px;line-height:1.7;white-space:pre;}
+  .tok-k{color:#7ab8ff;} .tok-s{color:#8fe3a8;} .tok-c{color:#6b7794;} .tok-n{color:#f2b366;} .tok-p{color:#c8a6ff;}
+
+  .tabs{display:flex;gap:6px;margin:6px 0 0;}
+  .tab{border:1px solid var(--line);background:#fff;border-radius:8px 8px 0 0;padding:8px 14px;font-size:13px;font-weight:700;color:var(--g600);cursor:pointer;border-bottom:none;}
+  .tab.on{color:var(--ink);background:#fff;box-shadow:inset 0 -2px 0 var(--accent);}
+  .panel{display:none;} .panel.on{display:block;}
+
+  /* right nav */
+  .rail{position:fixed;right:max(20px,calc((100vw - 1280px)/2 + 20px));top:130px;width:180px;font-size:13px;display:flex;flex-direction:column;gap:2px;}
+  .rail a{color:var(--g500);padding:5px 10px;border-left:2px solid var(--line);}
+  .rail a.on{color:var(--accent);border-left-color:var(--accent);font-weight:700;}
+
+  @media (max-width:1180px){ .rail{display:none;} }
+  @media (max-width:900px){
+    .wrap{grid-template-columns:1fr;gap:24px;padding:24px 18px 90px;}
+    .preview{position:static;} .phone{margin:0 auto;} .grid2{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="kick">개발 가이드 · Handoff</div>
+    <h1>예약 넛지 띠배너 <code style="font-size:16px;color:var(--g600)">new/info_bar</code></h1>
+    <div class="sub">차량선택 화면 하단 수요 넛지 — Web · iOS · Android 구현 명세</div>
+  </div>
+
+  <nav class="rail" id="rail">
+    <a href="#overview" class="on">개요</a>
+    <a href="#states">상태</a>
+    <a href="#spec">디자인 명세</a>
+    <a href="#motion">인터랙션 · 모션</a>
+    <a href="#impl">구현</a>
+    <a href="#copy">카피 · 데이터</a>
+    <a href="#a11y">접근성</a>
+  </nav>
+
+  <div class="wrap">
+    <!-- LEFT: live preview -->
+    <aside class="preview">
+      <div class="phone">
+        <div class="scr">
+          <div class="content"><div class="ph s"></div><div class="ph m"></div><div class="ph m"></div><div class="ph s"></div></div>
+          <div class="ibar" id="ibar"><div class="grad"></div><span class="t">🔥 이 날은 예약이 평소 대비 <b>2배</b> 몰리고 있어요</span></div>
+          <div class="cta"><div><div class="l">예상 요금</div><div class="p">125,000원</div></div><button class="next">다음</button></div>
+        </div>
+      </div>
+      <div class="pvbtns">
+        <button class="pvbtn pri" id="replay">▶ 진입 재생</button>
+        <button class="pvbtn" id="dock">도킹</button>
+      </div>
+      <div class="pvcap">진입: 바텀 바 뒤에서 슬라이드업 → 도킹 → 플로팅. 화면 터치/스크롤 시 도킹.</div>
+    </aside>
+
+    <!-- RIGHT: docs -->
+    <main class="docs">
+      <section id="overview">
+        <h2><span class="n">01</span>개요</h2>
+        <p class="lead">해당 탑승일의 예약 수요가 평소보다 높을 때, 차량선택 화면 하단에서 사용자의 예약 완료를 자연스럽게 유도하는 넛지 배너입니다. 진입 시 <b>플로팅으로 강조</b>했다가, 사용자가 화면과 상호작용하면 <b>띠배너(도킹)</b>로 가라앉아 방해를 최소화합니다.</p>
+        <span class="chip">트리거: 화면 진입 시</span><span class="chip">노출: 진입할 때마다</span><span class="chip">위치: CTA 바 바로 위</span>
+      </section>
+
+      <section id="states">
+        <h2><span class="n">02</span>상태 (States)</h2>
+        <p class="lead">두 가지 상태를 오갑니다. 진입 시 도킹→플로팅, 상호작용 시 플로팅→도킹.</p>
+        <div class="grid2">
+          <div class="card">
+            <div class="ct">Floating · 강조</div>
+            <div class="kv"><span class="k">배경</span><span class="v">수평 그라데이션 <code>#0094F9→#32A2FA</code></span></div>
+            <div class="kv"><span class="k">코너</span><span class="v">r2 = <code>8</code></span></div>
+            <div class="kv"><span class="k">마진</span><span class="v">좌우 16 · 하단 16</span></div>
+            <div class="kv"><span class="k">타이포</span><span class="v">15 / Regular (‘N배’ Bold), 흰색</span></div>
+            <div class="kv"><span class="k">그림자</span><span class="v">파란 글로우 + 소프트</span></div>
+            <div class="kv"><span class="k">쉬머</span><span class="v">흰색 하이라이트 좌→우</span></div>
+          </div>
+          <div class="card">
+            <div class="ct">Docked · 정지(띠배너)</div>
+            <div class="kv"><span class="k">배경</span><span class="v"><code>blue-50 #E2F2FE</code> 단색</span></div>
+            <div class="kv"><span class="k">코너</span><span class="v"><code>0</code> (풀블리드)</span></div>
+            <div class="kv"><span class="k">마진</span><span class="v">없음 (화면 폭 100%)</span></div>
+            <div class="kv"><span class="k">타이포</span><span class="v">13 / gray-800, ‘N배’ blue-600 Bold</span></div>
+            <div class="kv"><span class="k">그림자</span><span class="v">없음</span></div>
+            <div class="kv"><span class="k">비고</span><span class="v">기존 <code>new/info_bar</code> 컴포넌트와 동일</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="spec">
+        <h2><span class="n">03</span>디자인 명세</h2>
+        <p class="lead">디자인 토큰 기준 값. Spoqa Han Sans Neo.</p>
+        <div class="grid2">
+          <div class="card">
+            <div class="ct">레이아웃</div>
+            <div class="kv"><span class="k">높이</span><span class="v">가변 (패딩 기반)</span></div>
+            <div class="kv"><span class="k">패딩</span><span class="v">좌우 <code>18</code> · 상하 <code>12</code> (플로팅)</span></div>
+            <div class="kv"><span class="k">패딩</span><span class="v">좌우 <code>12</code> · 상하 <code>10</code> (도킹)</span></div>
+            <div class="kv"><span class="k">코너</span><span class="v">r2 <code>8</code> / 도킹 <code>0</code></span></div>
+            <div class="kv"><span class="k">사이드 마진</span><span class="v"><code>16</code> (플로팅)</span></div>
+            <div class="kv"><span class="k">하단 마진</span><span class="v"><code>16</code> (CTA 바와의 간격)</span></div>
+          </div>
+          <div class="card">
+            <div class="ct">타이포그래피</div>
+            <div class="kv"><span class="k">플로팅</span><span class="v">15 / line 22 / Regular</span></div>
+            <div class="kv"><span class="k">강조 ‘N배’</span><span class="v">15 / Bold</span></div>
+            <div class="kv"><span class="k">도킹</span><span class="v">13 / line 18 / Regular</span></div>
+            <div class="kv"><span class="k">정렬</span><span class="v">중앙 · 한 줄 (nowrap)</span></div>
+            <div class="kv"><span class="k">아이콘</span><span class="v">🔥 (텍스트 선행)</span></div>
+          </div>
+          <div class="card">
+            <div class="ct">색상</div>
+            <div class="kv"><span class="k">그라데이션</span><span class="v"><code>#0094F9</code> → <code>#32A2FA</code> (90°)</span></div>
+            <div class="kv"><span class="k">텍스트(플로팅)</span><span class="v"><code>#FFFFFF</code></span></div>
+            <div class="kv"><span class="k">도킹 배경</span><span class="v"><code>#E2F2FE</code> (blue-50)</span></div>
+            <div class="kv"><span class="k">도킹 텍스트</span><span class="v"><code>#383D4F</code> / 강조 <code>#0086EA</code></span></div>
+          </div>
+          <div class="card">
+            <div class="ct">그림자 · 쉬머</div>
+            <div class="kv"><span class="k">그림자 1</span><span class="v"><code>0 8 24 rgba(50,162,250,.28)</code></span></div>
+            <div class="kv"><span class="k">그림자 2</span><span class="v"><code>0 2 8 rgba(0,0,0,.06)</code></span></div>
+            <div class="kv"><span class="k">쉬머 색</span><span class="v">투명→<code>rgba(255,255,255,.25)</code>→투명</span></div>
+            <div class="kv"><span class="k">쉬머 이동</span><span class="v">좌→우 sweep, 반복</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="motion">
+        <h2><span class="n">04</span>인터랙션 · 모션</h2>
+        <p class="lead">화면 진입 시(첫 진입·복귀 동일):</p>
+        <ul class="tl">
+          <li><b>바텀 바 뒤에서 슬라이드업</b> — 배너가 CTA 컨테이너 뒤(아래)에서 시작해 위로 올라와 도킹 위치에 안착 <span class="mut">(CTA 바가 배너보다 위에 렌더 → 뒤에서 나오는 효과)</span></li>
+          <li><b>도킹 → 플로팅 모프</b> — 도킹 스트립이 좌우 16 인셋·라운드 8·그라데이션·리프트되며 플로팅 카드로 전환</li>
+          <li><b>플로팅 유지</b> — 쉬머 반복. 자동으로 도킹하지 않음</li>
+          <li><b>도킹</b> — 사용자가 <b>화면 터치·스크롤·클릭</b>(첫 상호작용) 시 플로팅 → 도킹으로 가라앉음</li>
+        </ul>
+        <h3>타이밍 (1× 기준)</h3>
+        <div class="card">
+          <div class="kv"><span class="k">슬라이드업</span><span class="v">≈ 420ms · <code>cubic-bezier(.4,0,.2,1)</code></span></div>
+          <div class="kv"><span class="k">도킹 유지</span><span class="v">≈ 160ms 후 모프</span></div>
+          <div class="kv"><span class="k">모프</span><span class="v">≈ 420ms (색·크기·위치·라운드 동시 전이)</span></div>
+          <div class="kv"><span class="k">도킹 복귀</span><span class="v">≈ 420ms (상호작용 트리거)</span></div>
+          <div class="kv"><span class="k">시작 오프셋</span><span class="v"><code>translateY(74px)</code> (바텀 바 뒤)</span></div>
+        </div>
+      </section>
+
+      <section id="impl">
+        <h2><span class="n">05</span>구현</h2>
+        <p class="lead">두 상태 + 진입/도킹 전이. 아래는 참조 구현입니다.</p>
+        <div class="tabs" id="tabs">
+          <button class="tab on" data-p="web">Web (CSS/JS)</button>
+          <button class="tab" data-p="ios">iOS (SwiftUI)</button>
+          <button class="tab" data-p="aos">Android (Compose)</button>
+        </div>
+
+        <div class="panel on" data-p="web">
+          <div class="codewrap"><div class="codehead"><span class="lang">CSS · 상태 전이</span><button class="copy">복사</button></div>
+<pre><code><span class="tok-c">/* 공통 · 도킹(정지) */</span>
+<span class="tok-p">.info-bar</span>{ position:absolute; left:0; right:0; bottom:<span class="tok-n">var(--cta-h)</span>;
+  padding:10px 12px; background:<span class="tok-n">#E2F2FE</span>; border-radius:0; opacity:0;
+  display:flex; justify-content:center; overflow:hidden; z-index:4;
+  transition:left .42s <span class="tok-n">var(--e)</span>, right .42s <span class="tok-n">var(--e)</span>, bottom .42s <span class="tok-n">var(--e)</span>,
+    border-radius .42s <span class="tok-n">var(--e)</span>, box-shadow .42s <span class="tok-n">var(--e)</span>, transform .42s <span class="tok-n">var(--e)</span>, opacity .18s; }
+<span class="tok-p">.info-bar .grad</span>{ position:absolute; inset:0; opacity:0; transition:opacity .42s;
+  background:<span class="tok-k">linear-gradient</span>(90deg, <span class="tok-n">#0094F9</span>, <span class="tok-n">#32A2FA</span>); }
+<span class="tok-p">.info-bar .txt</span>{ position:relative; z-index:1; font-size:13px; color:<span class="tok-n">#383D4F</span>; white-space:nowrap;
+  transition:color .42s, font-size .42s; }
+<span class="tok-p">.info-bar .txt b</span>{ color:<span class="tok-n">#0086EA</span>; font-weight:700; }
+
+<span class="tok-c">/* 플로팅(강조) */</span>
+<span class="tok-p">.info-bar.is-floating</span>{ left:16px; right:16px; bottom:<span class="tok-k">calc</span>(<span class="tok-n">var(--cta-h)</span> + 16px);
+  border-radius:8px; box-shadow:0 8px 24px rgba(50,162,250,.28), 0 2px 8px rgba(0,0,0,.06); }
+<span class="tok-p">.info-bar.is-floating .grad</span>{ opacity:1; }
+<span class="tok-p">.info-bar.is-floating .txt</span>{ font-size:15px; color:#fff; }
+<span class="tok-p">.info-bar.is-floating .txt b</span>{ color:#fff; }
+
+<span class="tok-c">/* z-index: CTA 바가 배너 위 → 뒤에서 슬라이드업 */</span>
+<span class="tok-p">.cta-bar</span>{ z-index:5; }</code></pre></div>
+
+          <div class="codewrap"><div class="codehead"><span class="lang">JS · 진입/도킹</span><button class="copy">복사</button></div>
+<pre><code><span class="tok-k">function</span> <span class="tok-n">enter</span>(){                         <span class="tok-c">// 화면 진입마다 호출</span>
+  bar.classList.remove(<span class="tok-s">'is-floating'</span>);
+  bar.style.transition = <span class="tok-s">'none'</span>;
+  bar.style.opacity = <span class="tok-s">'1'</span>;
+  bar.style.transform = <span class="tok-s">'translateY(74px)'</span>;  <span class="tok-c">// 바텀 바 뒤에서 시작</span>
+  bar.offsetWidth;                          <span class="tok-c">// reflow</span>
+  bar.style.transition = <span class="tok-s">''</span>;
+  bar.style.transform = <span class="tok-s">'translateY(0)'</span>;      <span class="tok-c">// 슬라이드업 → 도킹</span>
+  <span class="tok-k">setTimeout</span>(() => {
+    bar.classList.add(<span class="tok-s">'is-floating'</span>);       <span class="tok-c">// 도킹 → 플로팅 모프</span>
+    armDock();
+  }, <span class="tok-n">580</span>);                                 <span class="tok-c">// 슬라이드 + 유지</span>
+}
+<span class="tok-k">function</span> <span class="tok-n">armDock</span>(){                       <span class="tok-c">// 첫 상호작용에 도킹</span>
+  <span class="tok-k">const</span> dock = () => bar.classList.remove(<span class="tok-s">'is-floating'</span>);
+  scroller.addEventListener(<span class="tok-s">'scroll'</span>, dock, { once:<span class="tok-k">true</span>, passive:<span class="tok-k">true</span> });
+  screen.addEventListener(<span class="tok-s">'pointerdown'</span>, dock, { once:<span class="tok-k">true</span> });
+}</code></pre></div>
+        </div>
+
+        <div class="panel" data-p="ios">
+          <div class="codewrap"><div class="codehead"><span class="lang">SwiftUI</span><button class="copy">복사</button></div>
+<pre><code><span class="tok-k">enum</span> <span class="tok-n">NudgeState</span> { <span class="tok-k">case</span> docked, floating }
+
+<span class="tok-k">struct</span> <span class="tok-n">NudgeInfoBar</span>: <span class="tok-n">View</span> {
+  <span class="tok-k">let</span> multiplier: <span class="tok-n">Int</span>                 <span class="tok-c">// 실제 수요 배수</span>
+  <span class="tok-k">@State</span> <span class="tok-k">private</span> <span class="tok-k">var</span> state: <span class="tok-n">NudgeState</span> = .docked
+  <span class="tok-k">@State</span> <span class="tok-k">private</span> <span class="tok-k">var</span> appeared = <span class="tok-k">false</span>
+
+  <span class="tok-k">var</span> body: <span class="tok-k">some</span> <span class="tok-n">View</span> {
+    <span class="tok-n">text</span>
+      .padding(.horizontal, state == .floating ? <span class="tok-n">18</span> : <span class="tok-n">12</span>)
+      .padding(.vertical,   state == .floating ? <span class="tok-n">12</span> : <span class="tok-n">10</span>)
+      .frame(maxWidth: .infinity)
+      .background(background)
+      .clipShape(<span class="tok-n">RoundedRectangle</span>(cornerRadius: state == .floating ? <span class="tok-n">8</span> : <span class="tok-n">0</span>))
+      .shadow(color: <span class="tok-n">Color</span>(hex: <span class="tok-s">"#32A2FA"</span>).opacity(state == .floating ? <span class="tok-n">0.28</span> : <span class="tok-n">0</span>), radius: <span class="tok-n">12</span>, y: <span class="tok-n">8</span>)
+      .padding(.horizontal, state == .floating ? <span class="tok-n">16</span> : <span class="tok-n">0</span>)      <span class="tok-c">// 사이드 마진</span>
+      .offset(y: appeared ? <span class="tok-n">0</span> : <span class="tok-n">74</span>)                     <span class="tok-c">// 바텀 바 뒤 → 슬라이드업</span>
+      .animation(.easeInOut(duration: <span class="tok-n">0.42</span>), value: state)
+      .onAppear { enter() }
+  }
+
+  <span class="tok-k">private</span> <span class="tok-k">var</span> text: <span class="tok-k">some</span> <span class="tok-n">View</span> {
+    (<span class="tok-n">Text</span>(<span class="tok-s">"🔥 이 날은 예약이 평소 대비 "</span>)
+      + <span class="tok-n">Text</span>(<span class="tok-s">"\(multiplier)배"</span>).bold()
+      + <span class="tok-n">Text</span>(<span class="tok-s">" 몰리고 있어요"</span>))
+      .font(.system(size: <span class="tok-n">15</span>)).lineLimit(<span class="tok-n">1</span>)
+      .foregroundColor(state == .floating ? .white : <span class="tok-n">Color</span>(hex: <span class="tok-s">"#383D4F"</span>))
+  }
+
+  <span class="tok-k">@ViewBuilder</span> <span class="tok-k">private</span> <span class="tok-k">var</span> background: <span class="tok-k">some</span> <span class="tok-n">View</span> {
+    <span class="tok-k">if</span> state == .floating {
+      <span class="tok-n">LinearGradient</span>(colors: [<span class="tok-n">Color</span>(hex:<span class="tok-s">"#0094F9"</span>), <span class="tok-n">Color</span>(hex:<span class="tok-s">"#32A2FA"</span>)],
+                     startPoint: .leading, endPoint: .trailing)          <span class="tok-c">// + ShimmerOverlay()</span>
+    } <span class="tok-k">else</span> { <span class="tok-n">Color</span>(hex: <span class="tok-s">"#E2F2FE"</span>) }
+  }
+
+  <span class="tok-k">private</span> <span class="tok-k">func</span> enter() {
+    withAnimation(.easeOut(duration: <span class="tok-n">0.42</span>)) { appeared = <span class="tok-k">true</span> }    <span class="tok-c">// 슬라이드업</span>
+    <span class="tok-n">DispatchQueue</span>.main.asyncAfter(deadline: .now() + <span class="tok-n">0.58</span>) {
+      state = .floating                                                    <span class="tok-c">// 도킹 → 플로팅</span>
+    }
+  }
+}
+<span class="tok-c">// 스크롤/탭 제스처에서 state = .docked 로 도킹</span></code></pre></div>
+        </div>
+
+        <div class="panel" data-p="aos">
+          <div class="codewrap"><div class="codehead"><span class="lang">Jetpack Compose</span><button class="copy">복사</button></div>
+<pre><code><span class="tok-k">enum class</span> <span class="tok-n">NudgeState</span> { Docked, Floating }
+
+<span class="tok-k">@Composable</span>
+<span class="tok-k">fun</span> <span class="tok-n">NudgeInfoBar</span>(multiplier: <span class="tok-n">Int</span>, state: <span class="tok-n">NudgeState</span>, appeared: <span class="tok-n">Boolean</span>) {
+  <span class="tok-k">val</span> floating = state == <span class="tok-n">NudgeState</span>.Floating
+  <span class="tok-k">val</span> spec = tween&lt;<span class="tok-n">Float</span>&gt;(<span class="tok-n">420</span>, easing = <span class="tok-n">FastOutSlowInEasing</span>)
+
+  <span class="tok-k">val</span> side  <span class="tok-k">by</span> animateDpAsState(<span class="tok-k">if</span> (floating) <span class="tok-n">16</span>.dp <span class="tok-k">else</span> <span class="tok-n">0</span>.dp, tween(<span class="tok-n">420</span>))
+  <span class="tok-k">val</span> radius <span class="tok-k">by</span> animateDpAsState(<span class="tok-k">if</span> (floating) <span class="tok-n">8</span>.dp <span class="tok-k">else</span> <span class="tok-n">0</span>.dp, tween(<span class="tok-n">420</span>))
+  <span class="tok-k">val</span> yOff  <span class="tok-k">by</span> animateDpAsState(<span class="tok-k">if</span> (appeared) <span class="tok-n">0</span>.dp <span class="tok-k">else</span> <span class="tok-n">74</span>.dp, tween(<span class="tok-n">420</span>))  <span class="tok-c">// 슬라이드업</span>
+  <span class="tok-k">val</span> elev  <span class="tok-k">by</span> animateDpAsState(<span class="tok-k">if</span> (floating) <span class="tok-n">12</span>.dp <span class="tok-k">else</span> <span class="tok-n">0</span>.dp, tween(<span class="tok-n">420</span>))
+
+  <span class="tok-n">Row</span>(
+    <span class="tok-n">Modifier</span>
+      .offset(y = yOff)
+      .padding(horizontal = side)                          <span class="tok-c">// 사이드 마진</span>
+      .fillMaxWidth()
+      .shadow(elev, <span class="tok-n">RoundedCornerShape</span>(radius), spotColor = <span class="tok-n">Color</span>(<span class="tok-s">0xFF32A2FA</span>))
+      .clip(<span class="tok-n">RoundedCornerShape</span>(radius))
+      .background(<span class="tok-k">if</span> (floating) <span class="tok-n">Brush</span>.horizontalGradient(listOf(<span class="tok-n">Color</span>(<span class="tok-s">0xFF0094F9</span>), <span class="tok-n">Color</span>(<span class="tok-s">0xFF32A2FA</span>)))
+                  <span class="tok-k">else</span> <span class="tok-n">SolidColor</span>(<span class="tok-n">Color</span>(<span class="tok-s">0xFFE2F2FE</span>))),
+    horizontalArrangement = <span class="tok-n">Arrangement</span>.Center
+  ) {
+    <span class="tok-n">Text</span>(
+      buildAnnotatedString {
+        append(<span class="tok-s">"🔥 이 날은 예약이 평소 대비 "</span>)
+        withStyle(<span class="tok-n">SpanStyle</span>(fontWeight = <span class="tok-n">FontWeight</span>.Bold)) { append(<span class="tok-s">"${multiplier}배"</span>) }
+        append(<span class="tok-s">" 몰리고 있어요"</span>)
+      },
+      fontSize = <span class="tok-k">if</span> (floating) <span class="tok-n">15</span>.sp <span class="tok-k">else</span> <span class="tok-n">13</span>.sp, maxLines = <span class="tok-n">1</span>,
+      color = <span class="tok-k">if</span> (floating) <span class="tok-n">Color</span>.White <span class="tok-k">else</span> <span class="tok-n">Color</span>(<span class="tok-s">0xFF383D4F</span>)
+    )
+  }
+}
+<span class="tok-c">// 진입: appeared=true(슬라이드업) → 580ms 후 state=Floating. 스크롤/탭 시 state=Docked</span></code></pre></div>
+        </div>
+      </section>
+
+      <section id="copy">
+        <h2><span class="n">06</span>카피 · 데이터</h2>
+        <p class="lead">문구: <b>🔥 이 날은 예약이 평소 대비 N배 몰리고 있어요</b></p>
+        <div class="card">
+          <div class="kv"><span class="k">N (배수)</span><span class="v">해당 <b>탑승일</b>의 실제 수요 배수. 평소 기준(요일/시간대) 대비 서버 계산값.</span></div>
+          <div class="kv"><span class="k">‘이 날’</span><span class="v">이전 화면에서 선택한 탑승일 지칭 (오늘 아님).</span></div>
+          <div class="kv"><span class="k">강조</span><span class="v">‘N배’만 Bold (플로팅 흰색 / 도킹 blue-600).</span></div>
+        </div>
+        <div class="note" style="margin-top:12px;"><b>⚠️ 데이터 무결성.</b> N은 반드시 실데이터여야 합니다. 근거 없는 수치·상시 노출은 눈속임(다크패턴)으로 신뢰를 훼손하고 공정위 규제 리스크가 있습니다. 배수가 애매하거나 1.x배면 수치 없는 표현("예약이 빠르게 차고 있어요")으로 대체하세요.</div>
+      </section>
+
+      <section id="a11y">
+        <h2><span class="n">07</span>접근성</h2>
+        <div class="card">
+          <div class="kv"><span class="k">모션</span><span class="v"><code>prefers-reduced-motion</code> 시 쉬머·슬라이드 생략, 상태만 전환.</span></div>
+          <div class="kv"><span class="k">대비</span><span class="v">플로팅 흰색 텍스트/그라데이션 대비 AA 충족. 도킹 gray-800/blue-50 충족.</span></div>
+          <div class="kv"><span class="k">스크린리더</span><span class="v">텍스트 전체를 하나의 라벨로 읽되 장식 이모지는 라벨서 제외 권장.</span></div>
+          <div class="kv"><span class="k">터치 타깃</span><span class="v">배너 탭 시 도킹만 트리거(내비게이션 없음) — 오작동 없음.</span></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+  // preview animation
+  const bar=document.getElementById('ibar'), scr=bar.parentElement;
+  let t1,t2;
+  function enter(){
+    clearTimeout(t1); clearTimeout(t2);
+    bar.classList.remove('float');
+    bar.style.transition='none'; bar.style.opacity='1'; bar.style.transform='translateY(74px)';
+    bar.offsetWidth;
+    bar.style.transition=''; bar.style.transform='translateY(0)';
+    t1=setTimeout(()=>bar.classList.add('float'), 620);
+  }
+  function dock(){ clearTimeout(t1); bar.classList.remove('float'); }
+  document.getElementById('replay').addEventListener('click',enter);
+  document.getElementById('dock').addEventListener('click',dock);
+  window.addEventListener('load',()=>setTimeout(enter,400));
+
+  // tabs
+  document.getElementById('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(!b)return;
+    document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x===b));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.dataset.p===b.dataset.p));});
+
+  // copy buttons
+  document.querySelectorAll('.copy').forEach(btn=>btn.addEventListener('click',()=>{
+    const code=btn.closest('.codewrap').querySelector('pre code');
+    navigator.clipboard.writeText(code.innerText).then(()=>{btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(()=>{btn.textContent='복사';btn.classList.remove('done');},1400);});
+  }));
+
+  // rail active on scroll
+  const secs=[...document.querySelectorAll('.docs section')];
+  const links=[...document.querySelectorAll('.rail a')];
+  const io=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting){
+    links.forEach(a=>a.classList.toggle('on', a.getAttribute('href')==='#'+en.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+  secs.forEach(s=>io.observe(s));
+  links.forEach(a=>a.addEventListener('click',e=>{e.preventDefault();document.querySelector(a.getAttribute('href')).scrollIntoView({behavior:'smooth'});}));
+</script>
+</body>
+</html>
