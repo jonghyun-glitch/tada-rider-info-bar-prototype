@@ -12,10 +12,10 @@
     --gray-950:#171a24; --gray-900:#262a38; --gray-800:#383d4f; --gray-700:#4b5064;
     --gray-600:#60667a; --gray-500:#73788b; --gray-300:#9da0ae; --gray-100:#d5d7dc;
     --gray-80:#e3e4e8; --gray-30:#f5f6f7; --gray-400:#868b9c; --navy:#19254d; --navy-50:#e6e9ef;
-    --cta-h:88px; --float-gap:24px; --dock-dur:.42s; --grad-dur:1.6s;
-    --float-radius:9999px; --float-side:16px;
-    --shim-w:155px; --shim-peak:.25; --shim-x0:-190px; --shim-x1:500px;
-    --fl-fs:17px; --fl-fw:500;
+    --cta-h:88px; --float-gap:16px; --dock-dur:.42s; --grad-dur:1.6s;
+    --float-radius:8px; --float-side:16px;
+    --shim-w:220px; --shim-peak:.16; --shim-x0:-260px; --shim-x1:540px;
+    --fl-fs:15px; --fl-fw:400;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -461,8 +461,8 @@
     <div class="grp2">
       <label>버전 (넛지 위계·타이포)</label>
       <div class="seg" id="version">
-        <button data-v="cur" class="on">현재</button>
-        <button data-v="adj">조정</button>
+        <button data-v="cur">현재</button>
+        <button data-v="adj" class="on">조정</button>
       </div>
     </div>
     <div class="grp2">
@@ -476,9 +476,9 @@
     <div class="grp2">
       <label>코너</label>
       <div class="seg" id="corner">
-        <button data-r="9999" class="on">캡슐</button>
+        <button data-r="9999">캡슐</button>
         <button data-r="12">라운드 12</button>
-        <button data-r="8">라운드 8</button>
+        <button data-r="8" class="on">라운드 8</button>
       </div>
     </div>
     <div class="grp2">
@@ -492,9 +492,9 @@
     <div class="grp2">
       <label>하단 마진</label>
       <div class="seg" id="botm">
-        <button data-m="16">16</button>
+        <button data-m="16" class="on">16</button>
         <button data-m="20">20</button>
-        <button data-m="24" class="on">24</button>
+        <button data-m="24">24</button>
       </div>
     </div>
     <div class="grp2">
@@ -502,8 +502,8 @@
       <div class="seg" id="shimmer">
         <button data-s="sharp">선명</button>
         <button data-s="default">기본</button>
-        <button data-s="mid" class="on">중간</button>
-        <button data-s="soft">은은·넓게</button>
+        <button data-s="mid">중간</button>
+        <button data-s="soft" class="on">은은·넓게</button>
       </div>
     </div>
     <button class="replay" id="replay">▶ 다시 재생</button>
