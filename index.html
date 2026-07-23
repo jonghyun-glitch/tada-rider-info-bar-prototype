@@ -113,7 +113,7 @@
     padding:10px 12px;background:var(--blue-50);border-radius:0;box-shadow:none;overflow:hidden;z-index:4;opacity:0;
     transition:left var(--dock-dur) cubic-bezier(.4,0,.2,1),right var(--dock-dur) cubic-bezier(.4,0,.2,1),
       bottom var(--dock-dur) cubic-bezier(.4,0,.2,1),border-radius var(--dock-dur) cubic-bezier(.4,0,.2,1),
-      box-shadow var(--dock-dur) cubic-bezier(.4,0,.2,1),opacity .2s ease;}
+      box-shadow var(--dock-dur) cubic-bezier(.4,0,.2,1),transform var(--dock-dur) cubic-bezier(.4,0,.2,1),opacity .18s ease;}
   .ib-grad{position:absolute;inset:0;overflow:hidden;opacity:0;transition:opacity var(--dock-dur) ease;
     background:linear-gradient(90deg, #0094F9 0%, #32A2FA 100%);}
   .ib-shimmer{position:absolute;top:0;bottom:0;left:0;width:var(--shim-w);transform:translateX(var(--shim-x0));
@@ -131,7 +131,7 @@
   @media (prefers-reduced-motion:reduce){.infobar.floating .ib-shimmer{animation:none;}}
 
   /* bottom price area */
-  .bottom{position:absolute;left:0;right:0;bottom:0;background:#fff;z-index:3;
+  .bottom{position:absolute;left:0;right:0;bottom:0;background:#fff;z-index:5;
     box-shadow:0 -8px 8px rgba(25,37,77,.08);
     display:flex;align-items:center;justify-content:space-between;gap:20px;
     padding:20px 24px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));}
@@ -538,19 +538,22 @@
       phone.removeEventListener('wheel',trigger);
     };
   }
-  // 매 진입: 도킹 상태로 등장 → 플로팅으로 전환(모프). 첫 진입/복귀 동일. (타이머+CSS 기반)
-  function play(){
+  // 매 진입: 바텀 바 뒤(아래)에서 슬라이드 업 → 도킹 → 플로팅 모프. 첫 진입/복귀 동일.
+  function resetBehind(){                              // 바텀 바 뒤에 숨긴 시작 상태
     if(disarmDock){ disarmDock(); disarmDock=null; }
     clearTimeout(morphTimer); clearTimeout(armTimer);
-    bar.classList.remove('floating');                 // 도킹 상태로 스냅
-    bar.style.transition='none'; bar.style.transform='none'; bar.style.opacity='0';
+    bar.classList.remove('floating');
+    bar.style.transition='none'; bar.style.opacity='1'; bar.style.transform='translateY(74px)';
     void bar.offsetWidth;
-    bar.style.transition='';                          // CSS 트랜지션 복원(opacity .2s 포함)
-    bar.style.opacity='1';                            // 도킹 스트립 페이드인
+  }
+  function play(){
+    resetBehind();
+    bar.style.transition='';                          // CSS 트랜지션 복원(transform 포함)
+    bar.style.transform='translateY(0)';              // 도킹 위치로 슬라이드 업
     morphTimer=setTimeout(()=>{
-      bar.classList.add('floating');                  // 도킹 → 플로팅 (CSS transition)
+      bar.classList.add('floating');                  // 도킹 → 플로팅
       armTimer=setTimeout(armDock,(0.42/speed)*1000+80);
-    }, 360/speed);
+    }, (420+160)/speed);
   }
   document.getElementById('speed').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;speed=parseFloat(b.dataset.speed);document.querySelectorAll('#speed button').forEach(x=>x.classList.toggle('on',x===b));applySpeed();play();});
   document.getElementById('replay').addEventListener('click',play);
@@ -610,8 +613,9 @@
     phoneEl.classList.add('show-confirm');
   });
   document.getElementById('cf-back').addEventListener('click',()=>{
+    resetBehind();                        // 슬라이드 인 동안 바텀 바 뒤에 숨김
     phoneEl.classList.remove('show-confirm');
-    setTimeout(play, 380);   // 돌아오면 다시 재생
+    setTimeout(play, 380);                // 슬라이드 인 후 슬라이드업→모프
   });
 
   applySpeed();
