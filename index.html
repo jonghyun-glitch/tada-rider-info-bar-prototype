@@ -122,7 +122,7 @@
   .ib-text{position:relative;z-index:1;font-size:13px;line-height:18px;color:var(--gray-800);text-align:center;white-space:nowrap;transition:color var(--dock-dur) ease,font-size var(--dock-dur) ease,line-height var(--dock-dur) ease;}
   .ib-text b{font-weight:700;color:var(--blue-600);transition:color var(--dock-dur) ease;}
   .infobar.floating{left:var(--float-side);right:var(--float-side);bottom:calc(var(--cta-h) + env(safe-area-inset-bottom,0px) + var(--float-gap));
-    border-radius:var(--float-radius);box-shadow:0 8px 20px rgba(25,37,77,.14), 0 2px 6px rgba(25,37,77,.10);}
+    border-radius:var(--float-radius);box-shadow:0 4px 12px rgba(25,37,77,.10);}
   .infobar.floating{padding:12px 18px;}
   .infobar.floating .ib-text{font-size:var(--fl-fs);line-height:1.38;font-weight:var(--fl-fw);}
   .infobar.floating .ib-grad{opacity:1;}
@@ -148,7 +148,8 @@
   .nchip{display:inline-flex;align-items:center;gap:4px;background:var(--gray-30);color:var(--gray-700);
     border-radius:9999px;padding:0 10px 0 6px;font-size:13px;line-height:18px;white-space:nowrap;
     overflow:hidden;max-height:0;opacity:0;margin-top:0;transition:max-height .3s ease,opacity .28s ease,margin-top .3s ease,padding .3s ease;}
-  .nchip.show{max-height:26px;opacity:1;margin-top:6px;padding:4px 10px 4px 6px;}
+  .nchip.show{max-height:26px;opacity:1;margin-top:6px;padding:4px 10px 4px 6px;cursor:pointer;}
+  .nchip.show:active{background:#e9ebef;}
   .bottom .next{width:120px;background:var(--navy);color:#fff;font-size:16px;line-height:24px;font-weight:700;
     border:none;border-radius:4px;padding:14px 18px;flex:0 0 auto;}
 
@@ -510,7 +511,7 @@
   }
   const TL={
     legacy:'① 진입: 바텀 뒤 슬라이드업 → 도킹 → 플로팅<br>② 화면 터치·스크롤 시 blue-50 띠배너로 도킹',
-    coexist:'① 진입: 플로팅 (⚡ 띠배너·칩 숨김)<br>② 3초 후 스크롤 → 플로팅이 ‘✓ 예약이 몰리는 날’ 칩으로 모프<br>③ 이어서 ⚡ 100% 예약 확정 띠배너 상승'
+    coexist:'① 진입: 플로팅 (⚡ 띠배너·칩 숨김)<br>② 3초 후 스크롤 → 플로팅이 ‘✓ 예약이 몰리는 날’ 칩으로 모프<br>③ 이어서 ⚡ 100% 예약 확정 띠배너 상승<br>④ 칩 클릭 → 역순으로 플로팅 배너 복귀'
   };
   function setTL(){ tlEl.innerHTML='<b>동작</b><br>'+TL[impl]; }
   function clearTimers(){ clearTimeout(morphTimer); clearTimeout(armTimer); if(disarmDock){disarmDock();disarmDock=null;} }
@@ -546,16 +547,44 @@
     const sc=Math.max(to.width/from.width,.06);
     bar.style.transition='transform .42s cubic-bezier(.4,0,.2,1),opacity .32s ease';
     bar.style.transformOrigin='center center';
-    requestAnimationFrame(()=>{
+    setTimeout(()=>{                                    // rAF 대신 setTimeout (백그라운드 탭 rAF 정지 대비)
       bar.style.transform='translate('+dx+'px,'+dy+'px) scale('+sc+')';
       bar.style.opacity='0';
       nchip.classList.add('show');                     // 칩 등장
-    });
+    }, 20);
     morphTimer=setTimeout(()=>{
       bar.style.visibility='hidden';
       if(cond100) tbanner.classList.add('show');        // ⚡ 띠배너 상승
     }, 470);
   }
+
+  function undockCoexist(){                             // 칩 클릭 → 도킹 역순으로 플로팅 복귀
+    if(impl!=='coexist' || !nchip.classList.contains('show')) return;
+    clearTimers();
+    tbanner.classList.remove('show');                   // ⚡ 띠배너 하강
+    const from=nchip.getBoundingClientRect();           // 시작: 칩 위치
+    bar.style.transition='none';                        // 끝: 플로팅 레이아웃 위치 측정
+    bar.style.transform='translateY(0)'; bar.style.opacity='0';
+    void bar.offsetWidth;
+    const to=bar.getBoundingClientRect();
+    const dx=(from.left+from.width/2)-(to.left+to.width/2);
+    const dy=(from.top+from.height/2)-(to.top+to.height/2);
+    const sc=Math.max(from.width/to.width,.06);
+    bar.style.transformOrigin='center center';          // 칩 위치에 축소·투명 상태로 배치
+    bar.style.transform='translate('+dx+'px,'+dy+'px) scale('+sc+')';
+    bar.style.visibility='visible';
+    void bar.offsetWidth;
+    nchip.classList.remove('show');                     // 칩 사라짐
+    bar.style.transition='transform .42s cubic-bezier(.4,0,.2,1),opacity .32s ease';
+    setTimeout(()=>{                                     // 플로팅으로 확대·페이드인 (setTimeout: 백그라운드 rAF 대비)
+      bar.style.transform='translateY(0)'; bar.style.opacity='1';
+    }, 20);
+    morphTimer=setTimeout(()=>{                          // 복귀 후 재도킹 재무장
+      bar.style.transition=''; bar.style.transformOrigin='';
+      armTimer=setTimeout(()=>armInteraction(dockCoexist,true), 3000);
+    }, 470);
+  }
+  nchip.addEventListener('click', undockCoexist);
 
   function play(){
     resetBase(); setTL();
