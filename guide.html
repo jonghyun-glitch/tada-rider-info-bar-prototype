@@ -128,6 +128,7 @@
     <a href="#impl">구현</a>
     <a href="#copy">카피 · 데이터</a>
     <a href="#a11y">접근성</a>
+    <a href="#handoff">핸드오프</a>
   </nav>
 
   <div class="wrap">
@@ -432,6 +433,736 @@
           <div class="kv"><span class="k">터치 타깃</span><span class="v">배너 탭 시 도킹만 트리거(내비게이션 없음) — 오작동 없음.</span></div>
         </div>
       </section>
+      <section id="handoff">
+        <h2><span class="n">08</span>다른 환경에서 이어서 작업하기 (핸드오프)</h2>
+        <p class="lead">이 프로토타입을 다른 컴퓨터의 Claude Code에서 처음부터 그대로 재현하고 이어서 작업하기 위한 자료입니다. 아래 <b>작업 브리프</b>와 <b>전체 index.html 소스</b>를 복사해 새 Claude Code 세션에 붙여넣고 “이 프로토타입을 재현하고 이어서 작업해줘”라고 요청하세요.</p>
+        <div class="note"><b>사용법</b> — ① 아래 두 블록을 각각 복사 → ② 새 Claude Code에 붙여넣기 → ③ 브리프의 스펙대로 index.html을 저장하고 정적 서버로 확인 → ④ 이어서 수정·배포. 브리프가 현재 최종 상태의 기준(source of truth)입니다.</p>
+
+        <h3>1) 작업 브리프 (Markdown)</h3>
+        <div class="codewrap"><div class="codehead"><span class="lang">Markdown · 재현 브리프</span><button class="copy">복사</button></div>
+<pre><code># 타다 라이더앱 · 예약 넛지 띠배너(new/info_bar) 프로토타입 — 재현 핸드오프
+
+이 문서 하나 + 아래 "전체 index.html 소스"만 있으면 프로토타입을 처음부터 그대로 재현하고 이어서 작업할 수 있습니다.
+
+## 목적
+예약 3.0 "차량 선택" 화면 하단의 수요 넛지 배너. 해당 탑승일 예약 수요가 평소보다 높을 때
+"🔥 이 날은 예약이 평소 대비 N배 몰리고 있어요"를 진입 시 플로팅으로 강조했다가,
+사용자가 화면과 상호작용하면 도킹시켜 방해를 최소화한다. 외부 의존성 없는 단일 HTML 파일.
+
+## 산출물 / 배포
+- 소스: 단일 파일 index.html (HTML+CSS+JS 전부 인라인, 차량 이미지 assets/*.png만 외부)
+- 로컬 프리뷰: 정적 서버로 서빙(예: node 정적 서버, 포트 4599) 후 브라우저에서 확인
+- 배포: GitHub Pages(public repo). 라이브 = https://jonghyun-glitch.github.io/tada-rider-info-bar-prototype/
+- 개발 가이드: guide.html (좌측에 index.html을 iframe로 실제 임베드, 우측 명세)
+
+## 두 구현 버전 (⚙ 설정 토글로 전환)
+1) 기존(legacy) — 넛지 단독. 진입: 바텀 바 뒤에서 슬라이드업 → 도킹 → 플로팅 모프.
+   상호작용(스크롤/터치) 시 blue-50 풀블리드 띠배너로 도킹.
+2) 신규(coexist) — ⚡"넥스트 호출 시 100% 예약 확정" 띠배너와 공존.
+   진입: 바로 플로팅. 3초 후 첫 스크롤 → 플로팅이 '✓ 예약이 몰리는 날' 칩으로 모프(FLIP 축소·이동)
+   → 이어서 ⚡ 100% 예약 확정 띠배너가 요금영역 위로 상승.
+   칩 클릭 → 도킹 역순(undock)으로 플로팅 배너 복귀.
+
+## 상태별 스펙
+### 플로팅(강조)
+- 문구 1줄, 15px, 'N배'만 Bold, 흰색. 배경 = 수평(90°) 그라데이션 #0094F9 → #32A2FA.
+- 코너 라운드 8 기본(옵션 12·캡슐). 좌우 마진 16, 하단 마진 16, 내부 패딩 좌우18/상하12.
+- 그림자(확정): 0 4px 12px rgba(25,37,77,.10) — 옅은 단일 섀도우.
+  (초기 Figma to-be의 0 8 24 rgba(50,162,250,.28) 파란 글로우는 뒤 콘텐츠에 반투명 레이어처럼
+   번져 보여 폐기함.)
+- 쉬머: 흰 하이라이트 좌→우 sweep(폭≈155, α≈.25).
+### 도킹(기존, blue-50 스트립)
+- 풀블리드 blue-50 #E2F2FE, 라운드 0, 13px gray-800 + 'N배' blue-600 Bold. new/info_bar 원본 동일.
+### 도킹(신규, 칩 + ⚡ 공존)
+- 칩(chip_badge / Neutral Weak Solid): bg gray-30 #F5F6F7, 텍스트 gray-700 #4B5064, rounded-full,
+  padding 4 10 4 6, ✓ 아이콘 14px + "예약이 몰리는 날" 13px.
+- ⚡ 띠배너: blue-50 배경, "⚡ 넥스트 호출 시 100% 예약 확정" (100%만 blue-600 Bold), 13px, 높이 38.
+
+## 핵심 레이아웃 규칙 (반드시 지킬 것)
+- 요금 컨테이너(예상요금 + 다음 버튼)는 칩 유무와 무관하게 **높이 고정(= Figma 92px)**.
+  align-items:center로 요금 블록만 재정렬(칩 없음=세로중앙, 칩 있음=상단정렬). 다음 버튼은 안 움직임.
+  구현: .bottom { box-sizing:border-box; height:calc(92px + env(safe-area-inset-bottom)); align-items:center; }
+- 칩은 max-height 0↔26 + padding 상하 0↔4 로 접힘 → 접힌 상태 실제 0px(패딩 누수 없음).
+- 전체 하단 스택에서 유일하게 높이가 변하는 것은 ⚡ 띠배너(+38) 상승뿐.
+
+## 애니메이션 (1× 기준, 기본 재생속도 0.75×)
+- 진입 슬라이드업/도킹 모프: dock-dur 0.42s, cubic-bezier(.4,0,.2,1).
+- 신규 도킹 모프: 플로팅→칩 FLIP (transform .42s + opacity .32s), 470ms 후 바 visibility:hidden + ⚡ 상승.
+- 칩 undock: 위 과정을 역순으로(칩 위치에서 축소·투명 → 플로팅으로 확대·페이드인).
+- ⚠️ 도킹/undock 모프의 전이 시작은 requestAnimationFrame 대신 setTimeout(20ms) 사용.
+  (백그라운드/스로틀 탭에서 rAF가 멈춰 최종 상태가 적용되지 않는 문제 방지.)
+
+## 디자인 토큰
+blue-50 #E2F2FE · blue-500 #0094F9 · blue-600 #0086EA · tada-blue #32A2FA ·
+gray-30 #F5F6F7 · gray-700 #4B5064 · gray-800 #383D4F · gray-900 #262A38 · navy #19254D.
+radius r1=4, r2=8, full=9999.
+
+## ⚙ 설정 기본값 (확정)
+버전 = 신규(공존) · 100% 예약 확정 조건 = 있음 · 속도 0.75× · 코너 라운드 8 · 좌우 16 · 하단 16 · 쉬머 중간(155/.25).
+
+## Figma 매핑 (원문 보존 — 요약·변경 금지)
+- Rider App 파일 pgHS64des0suVdkcHugiGq:
+    컴포넌트 new/info_bar = 47171:92861 / 페이지 "4-01 예약 3.0" = 46806:81100 /
+    차량선택 화면(new12) = 56773:280296 / 작업 섹션 Section 1 = 56773:281005
+- 2026 3Q Rider Handoff 파일 7yJmkBctuI7mxP3842MOWo:
+    유저 최종 to-be 섹션 = 9073:12465 (to-be 1 플로팅 = 9073:12638, to-be 2 도킹 = 9073:11903),
+      banner (floating) = 9073:12466
+    내가 그린 넛지 배너 핸드오프 컨테이너 = 9067:2 (섹션 9047:5250 "변경 시안" 영역)
+    예약확인 화면 reserv_confrim = 9052:6658
+    [공존] 기존 띠배너 baseline = 9131:22717 / 플로팅업 상태 = 9132:22802 /
+      NEW 도킹 요금영역(칩+⚡) = 9131:22719 (내부: new/info_bar = 9131:22779,
+      chip_badge "✓ 예약이 몰리는 날" = 9131:22732) / 상태 비교 보드 Section 2 = 9133:22822
+
+## 요구사항 체크리스트 (모두 충족됨)
+- [x] 진입 시 플로팅으로 강조 → 첫 상호작용 시 도킹
+- [x] 신규: ⚡ 100% 예약 확정 띠배너와 공존 — 플로팅→칩 모프 후 ⚡ 상승
+- [x] 칩 클릭 → 도킹 역순으로 플로팅 배너 복귀
+- [x] 칩 모프 시 요금 컨테이너 높이 불변(다음 버튼 고정)
+- [x] 플로팅 섀도우 최소화(반투명 레이어 겹침 제거)
+- [x] 다음 화면(예약확인)에 배너가 애니메이션 없이 그대로 따라옴
+- [x] 기존/신규 토글, 기존 버전은 기본값으로 확정
+
+## 주의
+- Spoqa Han Sans Neo 미설치 환경 → 시스템 폰트로 대체됨(실기기엔 Spoqa).
+- 'N배' 수치는 반드시 실제 데이터 기반이어야 함(가짜 수치 = 다크패턴 / 공정위 리스크).
+
+## 이어서 작업하는 법
+1) 아래 "전체 index.html 소스"를 복사해 새 파일 index.html로 저장.
+2) 정적 서버로 열어 동작 확인(설정 ⚙에서 기존/신규·조건 토글).
+3) 수정 후 배포 리포에 복사 → git commit → git push (GitHub Pages 자동 반영).</code></pre></div>
+
+        <h3>2) 전체 index.html 소스 (최종본)</h3>
+        <p class="lead" style="margin:6px 0 12px">그대로 <code>index.html</code>로 저장하면 됩니다. (차량 썸네일 <code>assets/*.png</code>는 Figma에서 export한 이미지로, 없으면 해당 영역만 빈 이미지로 보입니다.)</p>
+        <div class="codewrap"><div class="codehead"><span class="lang">index.html · 단일 파일 전체</span><button class="copy">복사</button></div>
+<pre><code>&lt;!doctype html&gt;
+&lt;html lang="ko"&gt;
+&lt;head&gt;
+&lt;meta charset="utf-8" /&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" /&gt;
+&lt;title&gt;타다 예약 · 하단 띠배너 강조 프로토타입&lt;/title&gt;
+&lt;style&gt;
+  :root{
+    color-scheme: light;
+    --white:#ffffff; --blue-50:#e2f2fe; --blue-30:#f1f9fe;
+    --blue-500:#0094f9; --blue-600:#0086ea; --tada-blue:#32a2fa;
+    --gray-950:#171a24; --gray-900:#262a38; --gray-800:#383d4f; --gray-700:#4b5064;
+    --gray-600:#60667a; --gray-500:#73788b; --gray-300:#9da0ae; --gray-100:#d5d7dc;
+    --gray-80:#e3e4e8; --gray-30:#f5f6f7; --gray-400:#868b9c; --navy:#19254d; --navy-50:#e6e9ef;
+    --cta-h:88px; --float-gap:16px; --dock-dur:.42s; --grad-dur:1.6s;
+    --float-radius:8px; --float-side:16px;
+    --shim-w:155px; --shim-peak:.25; --shim-x0:-190px; --shim-x1:500px;
+    --fl-fs:15px; --fl-fw:400;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:"Spoqa Han Sans Neo",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    background:#eef1f5;color:var(--gray-950);-webkit-font-smoothing:antialiased;}
+  .stage{min-height:100dvh;display:flex;align-items:center;justify-content:center;gap:40px;padding:24px;flex-wrap:wrap;}
+
+  .phone{width:393px;height:820px;background:#fff;border-radius:40px;border:1px solid #e6eaf0;
+    box-shadow:0 24px 60px rgba(20,30,55,.22);position:relative;overflow:hidden;flex:0 0 auto;}
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;background:#fff;
+    transition:transform .34s cubic-bezier(.4,0,.2,1);}
+  #screen-confirm{transform:translateX(100%);background:var(--navy-50);z-index:2;box-shadow:-14px 0 34px rgba(20,30,55,.14);}
+  .phone.show-confirm #screen-confirm{transform:translateX(0);}
+  .phone.show-confirm #screen-select{transform:translateX(-22%);}
+
+  /* status + appbar */
+  .topbar{flex:0 0 auto;background:#fff;position:relative;z-index:6;}
+  .statusbar{height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 22px 0 24px;}
+  .statusbar .time{font-size:13px;letter-spacing:-.2px;color:#000;font-weight:500;}
+  .statusbar .sysico{display:flex;align-items:center;gap:5px;}
+  .statusbar .sysico i{display:block;background:#000;border-radius:1px;}
+  .statusbar .sig{width:17px;height:11px;-webkit-mask:linear-gradient(90deg,#000 0 0);
+    background:linear-gradient(90deg,#000 0 65%,#b9bcc4 65%);border-radius:2px;}
+  .statusbar .wifi{display:block;}
+  .statusbar .bat{width:24px;height:12px;border:1px solid #000;border-radius:3px;position:relative;}
+  .statusbar .bat::before{content:"";position:absolute;inset:1.5px;width:70%;background:#000;border-radius:1px;}
+  .statusbar .bat::after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:6px;background:#000;border-radius:0 2px 2px 0;}
+
+  .appbar{display:flex;align-items:center;gap:10px;padding:0 8px 10px;}
+  .appbar .ic{padding:10px;display:flex;flex:0 0 auto;}
+  .appbar .ic.ghost{opacity:0;}
+  .pillwrap{flex:1 1 auto;min-width:0;display:flex;justify-content:center;}
+  .pill{max-width:100%;background:#fff;border:1px solid var(--gray-100);border-radius:9999px;
+    box-shadow:0 2px 4px rgba(25,37,77,.05);padding:8px 20px;text-align:center;overflow:hidden;}
+  .pill .p1{font-size:14px;line-height:20px;font-weight:500;color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pill .p2{font-size:13px;line-height:18px;color:var(--gray-600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  /* scroll body */
+  .scroll{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;
+    padding-bottom:calc(var(--cta-h) + 38px + var(--float-gap) + env(safe-area-inset-bottom,0px) + 8px);}
+  .scroll::-webkit-scrollbar{width:0;height:0;display:none;}
+
+  /* 차량 선택 */
+  .lineup{padding:24px 0;}
+  .sec-head{display:flex;align-items:center;gap:10px;padding:0 24px;}
+  .sec-head .t{flex:1;font-size:16px;line-height:24px;font-weight:700;color:var(--gray-900);}
+  .sec-head .cond{display:flex;align-items:center;gap:2px;font-size:14px;line-height:20px;color:var(--gray-300);}
+  .cars{display:flex;gap:8px;align-items:center;justify-content:center;padding:20px 24px;}
+  .carpill{position:relative;border:1px solid var(--gray-80);background:#f9f9f9;border-radius:9999px;
+    padding:22px 10px;display:flex;align-items:center;justify-content:center;}
+  .carpill.sel{background:var(--blue-30);border-color:var(--blue-500);}
+  .carpill img{width:72px;height:46px;object-fit:contain;display:block;}
+  .carpill .chk{position:absolute;top:-1px;right:-1px;}
+  .title-blk{padding:12px 24px 8px;text-align:center;display:flex;flex-direction:column;gap:12px;}
+  .title-blk .cartitle{font-size:22px;line-height:30px;font-weight:700;color:var(--gray-950);}
+  .title-blk .carprice{font-size:16px;line-height:24px;color:var(--gray-900);margin-top:4px;}
+  .title-blk .paxrow{display:flex;align-items:center;justify-content:center;gap:2px;color:var(--gray-600);font-size:14px;line-height:20px;}
+  .title-blk .cars-sub{font-size:13px;line-height:18px;color:var(--gray-600);}
+
+  .divider{height:1px;background:#edeef1;margin:0 24px;}
+
+  /* 부가 서비스 */
+  .svc-sec{padding:24px 0 40px;display:flex;flex-direction:column;gap:16px;}
+  .svc-sec&gt;.hd{padding:0 24px;font-size:16px;line-height:24px;font-weight:700;color:var(--gray-900);}
+  .svc-list{padding:0 24px;display:flex;flex-direction:column;gap:12px;}
+  .svc{display:flex;align-items:center;gap:16px;background:#fff;border:1px solid var(--gray-80);border-radius:8px;
+    padding:16px 20px 16px 16px;text-align:left;width:100%;}
+  .svc .thumb{width:56px;height:56px;flex:0 0 auto;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#f4f6f9;}
+  .svc .thumb.avatar{border-radius:9999px;border:2px solid #fff;box-shadow:0 0 0 1px #eceef1;}
+  .svc .thumb img{width:100%;height:100%;object-fit:cover;}
+  .svc .thumb.contain img{object-fit:contain;}
+  .svc .body{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:12px;}
+  .svc .txt{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:4px;}
+  .svc .txt .n{font-size:15px;line-height:22px;font-weight:700;color:var(--gray-900);}
+  .svc .txt .d{font-size:14px;line-height:20px;color:var(--gray-600);}
+  .svc .txt .f{font-size:14px;line-height:20px;color:var(--gray-800);}
+  .svc-note{padding:8px;font-size:13px;line-height:18px;color:var(--gray-500);}
+
+  /* 유의사항 */
+  .notice{background:var(--gray-30);padding:24px 24px 120px 20px;display:flex;flex-direction:column;gap:40px;}
+  .notice .grp{display:flex;flex-direction:column;gap:20px;}
+  .notice .sub{display:flex;flex-direction:column;gap:5px;}
+  .notice .sh{padding:5px;font-size:14px;line-height:20px;font-weight:700;color:var(--gray-700);}
+  .notice .bul{display:flex;gap:10px;padding-left:10px;font-size:13px;line-height:20px;color:var(--gray-800);}
+  .notice .bul .dot{width:5px;text-align:center;flex:0 0 auto;}
+  .notice .btns{display:flex;flex-direction:column;gap:5px;}
+  .notice .polbtn{margin-left:25px;background:var(--gray-80);border-radius:6px;padding:10px 12px;
+    display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;line-height:20px;font-weight:700;color:var(--gray-500);}
+  .notice .help{display:flex;align-items:center;gap:20px;}
+  .notice .help .l{flex:1;display:flex;align-items:flex-end;gap:4px;font-size:14px;line-height:20px;font-weight:700;color:var(--gray-700);}
+  .notice .help .r{font-size:13px;line-height:20px;color:var(--tada-blue);white-space:nowrap;}
+
+  /* info bar (강조 = FloatingLiveButton 스펙) */
+  .infobar{position:absolute;left:0;right:0;bottom:calc(var(--cta-h) + env(safe-area-inset-bottom,0px));
+    display:flex;align-items:center;justify-content:center;gap:4px;
+    padding:10px 12px;background:var(--blue-50);border-radius:0;box-shadow:none;overflow:hidden;z-index:4;opacity:0;
+    transition:left var(--dock-dur) cubic-bezier(.4,0,.2,1),right var(--dock-dur) cubic-bezier(.4,0,.2,1),
+      bottom var(--dock-dur) cubic-bezier(.4,0,.2,1),border-radius var(--dock-dur) cubic-bezier(.4,0,.2,1),
+      box-shadow var(--dock-dur) cubic-bezier(.4,0,.2,1),transform var(--dock-dur) cubic-bezier(.4,0,.2,1),opacity .18s ease;}
+  .ib-grad{position:absolute;inset:0;overflow:hidden;opacity:0;transition:opacity var(--dock-dur) ease;
+    background:linear-gradient(90deg, #0094F9 0%, #32A2FA 100%);}
+  .ib-shimmer{position:absolute;top:0;bottom:0;left:0;width:var(--shim-w);transform:translateX(var(--shim-x0));
+    background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,var(--shim-peak)) 50%, transparent 100%);}
+  .ib-text{position:relative;z-index:1;font-size:13px;line-height:18px;color:var(--gray-800);text-align:center;white-space:nowrap;transition:color var(--dock-dur) ease,font-size var(--dock-dur) ease,line-height var(--dock-dur) ease;}
+  .ib-text b{font-weight:700;color:var(--blue-600);transition:color var(--dock-dur) ease;}
+  .infobar.floating{left:var(--float-side);right:var(--float-side);bottom:calc(var(--cta-h) + env(safe-area-inset-bottom,0px) + var(--float-gap));
+    border-radius:var(--float-radius);box-shadow:0 4px 12px rgba(25,37,77,.10);}
+  .infobar.floating{padding:12px 18px;}
+  .infobar.floating .ib-text{font-size:var(--fl-fs);line-height:1.38;font-weight:var(--fl-fw);}
+  .infobar.floating .ib-grad{opacity:1;}
+  .infobar.floating .ib-shimmer{animation:shimmer var(--grad-dur) linear infinite;}
+  .infobar.floating .ib-text,.infobar.floating .ib-text b{color:#fff;}
+  @keyframes shimmer{0%{transform:translateX(var(--shim-x0));}100%{transform:translateX(var(--shim-x1));}}
+  @media (prefers-reduced-motion:reduce){.infobar.floating .ib-shimmer{animation:none;}}
+
+  /* bottom price area */
+  .pricewrap{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;flex-direction:column;box-shadow:0 -8px 8px rgba(25,37,77,.08);}
+  .tbanner{background:var(--blue-50);display:flex;align-items:center;justify-content:center;gap:4px;
+    padding:10px 12px;font-size:13px;line-height:18px;color:var(--gray-800);white-space:nowrap;
+    overflow:hidden;max-height:0;opacity:0;transition:max-height var(--dock-dur) cubic-bezier(.4,0,.2,1),opacity .3s ease;}
+  .tbanner b{color:var(--blue-600);font-weight:700;}
+  .tbanner.show{max-height:40px;opacity:1;}
+  /* 고정 높이(=Figma 92px 컨테이너). 칩 유무와 무관하게 컨테이너 높이 불변, align-center로 요금블록만 재정렬 */
+  .bottom{background:#fff;display:flex;align-items:center;justify-content:space-between;gap:20px;
+    box-sizing:border-box;height:calc(92px + env(safe-area-inset-bottom,0px));
+    padding:0 24px;padding-bottom:env(safe-area-inset-bottom,0px);}
+  .bottom .fare{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;}
+  .bottom .fare .l{font-size:13px;line-height:18px;color:#000;}
+  .bottom .fare .p{font-size:16px;line-height:24px;font-weight:700;color:#000;margin-top:2px;}
+  .nchip{display:inline-flex;align-items:center;gap:4px;background:var(--gray-30);color:var(--gray-700);
+    border-radius:9999px;padding:0 10px 0 6px;font-size:13px;line-height:18px;white-space:nowrap;
+    overflow:hidden;max-height:0;opacity:0;margin-top:0;transition:max-height .3s ease,opacity .28s ease,margin-top .3s ease,padding .3s ease;}
+  .nchip.show{max-height:26px;opacity:1;margin-top:6px;padding:4px 10px 4px 6px;cursor:pointer;}
+  .nchip.show:active{background:#e9ebef;}
+  .bottom .next{width:120px;background:var(--navy);color:#fff;font-size:16px;line-height:24px;font-weight:700;
+    border:none;border-radius:4px;padding:14px 18px;flex:0 0 auto;}
+
+  /* ---------- confirm screen ---------- */
+  #screen-confirm .topbar{background:var(--navy-50);}
+  .cf-scroll{background:var(--navy-50);padding-bottom:24px;}
+  .cf-title{display:flex;gap:16px;align-items:flex-start;padding:20px 28px 12px;}
+  .cf-title .cf-tt{flex:1;min-width:0;}
+  .cf-t1{font-size:18px;line-height:26px;font-weight:700;color:#000;}
+  .cf-t2{font-size:15px;line-height:22px;color:var(--gray-900);margin-top:8px;}
+  .cf-thumb{width:68px;height:44px;object-fit:contain;flex:0 0 auto;}
+  .cf-cards{display:flex;flex-direction:column;gap:10px;padding:0 16px;}
+  .cf-card{background:#fff;border-radius:8px;overflow:hidden;}
+  .cf-card .hd{display:flex;align-items:center;gap:12px;padding:20px 20px 0;}
+  .cf-card .hd .t{flex:1;font-size:16px;line-height:24px;font-weight:700;color:var(--gray-900);}
+  .chip{background:var(--gray-30);color:var(--gray-700);font-size:13px;line-height:18px;padding:4px 10px;border-radius:9999px;white-space:nowrap;}
+  .cf-route{display:flex;flex-direction:column;gap:6px;padding:16px 20px 20px;}
+  .cf-row2{display:flex;align-items:center;gap:12px;}
+  .cf-row2 .a{font-size:15px;line-height:22px;color:var(--gray-900);}
+  .cf-ic20{width:20px;height:20px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;}
+  .cf-dot{width:10px;height:10px;border-radius:50%;background:var(--blue-500);}
+  .cf-row{display:flex;align-items:center;gap:12px;padding:16px 20px;}
+  .cf-row .ic{width:20px;height:20px;flex:0 0 auto;display:flex;}
+  .cf-row .g{flex:1;min-width:0;}
+  .cf-row .g .a{font-size:15px;line-height:22px;color:var(--gray-900);}
+  .cf-row .g .b{font-size:12px;line-height:16px;color:var(--gray-600);margin-top:4px;}
+  .cf-arrow{width:20px;height:20px;flex:0 0 auto;color:#b8bcc7;display:flex;align-items:center;justify-content:center;}
+  .cf-div{height:1px;background:#edeef1;margin:0 20px;}
+  .cf-note2{font-size:13px;line-height:18px;color:var(--gray-500);padding:20px;}
+  .cf-fare{display:flex;flex-direction:column;gap:2px;padding:20px 20px 0;}
+  .cf-fr{display:flex;justify-content:space-between;font-size:14px;line-height:20px;color:var(--gray-900);}
+  .cf-frnote{font-size:12px;line-height:16px;color:var(--gray-500);text-align:right;}
+  .cf-total{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 20px;font-weight:700;color:var(--gray-900);}
+  .cf-total span:first-child{font-size:14px;}
+  .cf-total .amt{font-size:18px;line-height:26px;}
+  .cf-msgwrap{padding:0 16px 16px;}
+  .cf-msg{display:flex;align-items:center;gap:6px;background:var(--blue-30);color:var(--gray-800);font-size:14px;line-height:20px;padding:12px 16px 12px 10px;border-radius:4px;}
+  .cf-reqhd .t2{flex:1;font-size:14px;line-height:20px;font-weight:700;color:var(--gray-900);}
+  .cf-reqhd .opt{font-weight:400;color:var(--gray-400);margin-left:4px;}
+  .cf-bag{display:flex;align-items:center;gap:2px;font-size:14px;color:var(--gray-400);white-space:nowrap;}
+  .cf-reqrow .ph{font-size:14px;line-height:20px;color:var(--gray-400);}
+  .cf-presets{display:flex;flex-direction:column;padding:8px 4px 0;}
+  .cf-preset{display:flex;align-items:center;gap:12px;padding:14px;border-radius:8px;}
+  .cf-preset .p{flex:1;min-width:0;font-size:13px;line-height:18px;color:var(--gray-500);}
+  .cf-inputbtn{flex:0 0 auto;border:none;background:transparent;font-size:13px;line-height:18px;font-weight:700;color:var(--gray-800);padding:8px 10px;border-radius:6px;cursor:pointer;}
+  .cf-infobar{flex:0 0 auto;background:var(--blue-50);display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 12px;font-size:13px;line-height:18px;color:var(--gray-800);}
+  .cf-infobar b{color:var(--blue-600);font-weight:700;}
+  .cf-bottom{flex:0 0 auto;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:20px;
+    padding:20px 24px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 8px rgba(25,37,77,.06);}
+  .cf-bottom .fare .l{font-size:13px;line-height:18px;color:#000;}
+  .cf-bottom .fare .p{font-size:16px;line-height:24px;font-weight:700;color:#000;margin-top:2px;}
+  .cf-bottom .next{width:120px;background:var(--navy);color:#fff;font-size:16px;line-height:24px;font-weight:700;border:none;border-radius:4px;padding:14px 18px;flex:0 0 auto;}
+
+  /* controls */
+  .panel{width:320px;flex:0 0 auto;}
+  .panel h1{font-size:18px;margin:0 0 4px;}
+  .panel .sub{font-size:13px;color:#6b7482;margin:0 0 20px;line-height:1.5;}
+  .grp2{margin-bottom:18px;}
+  .grp2&gt;label{display:block;font-size:12px;font-weight:700;color:#6b7482;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;}
+  .seg{display:flex;background:#e3e8ef;border-radius:10px;padding:3px;gap:3px;}
+  .seg button{flex:1;border:none;background:transparent;padding:10px 6px;border-radius:8px;font-size:13px;font-weight:600;color:#5a6373;cursor:pointer;}
+  .seg button.on{background:#fff;color:#1c2430;box-shadow:0 1px 3px rgba(0,0,0,.12);}
+  .replay{width:100%;background:var(--navy);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;}
+  .tl{margin-top:20px;font-size:12px;color:var(--gray-500);line-height:1.9;}
+  .tl b{color:#5a6373;}
+
+  .fab,.replay-fab{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:30;
+    width:44px;height:44px;border-radius:50%;border:none;color:#fff;box-shadow:0 6px 18px rgba(20,30,55,.28);
+    cursor:pointer;backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+  .fab{right:14px;background:rgba(25,37,77,.9);font-size:20px;}
+  .replay-fab{right:68px;background:rgba(0,134,234,.94);font-size:22px;}
+  .replay-fab:active{transform:scale(.92);}
+  .scrim{display:none;}
+
+  @media (max-width:899px){
+    body{background:#fff;}
+    .stage{display:block;padding:0;min-height:0;}
+    .phone{width:100vw;height:100dvh;border-radius:0;border:none;box-shadow:none;}
+    .statusbar{padding-top:env(safe-area-inset-top,0px);height:calc(36px + env(safe-area-inset-top,0px));}
+    .fab,.replay-fab{display:flex;}
+    .scrim{display:block;position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:38;opacity:0;pointer-events:none;transition:opacity .25s;}
+    .scrim.open{opacity:1;pointer-events:auto;}
+    .panel{position:fixed;left:0;right:0;bottom:0;z-index:40;width:auto;background:#fff;border-radius:20px 20px 0 0;
+      padding:20px 20px calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 -12px 40px rgba(20,30,55,.25);
+      max-height:calc(100dvh - 32px);overflow-y:auto;
+      transform:translateY(110%);transition:transform .3s cubic-bezier(.32,.72,0,1);}
+    .panel.open{transform:translateY(0);}
+    .panel .grab{width:40px;height:4px;border-radius:2px;background:#d3d9e2;margin:0 auto 14px;}
+  }
+  @media (min-width:900px){ .panel .grab{display:none;} }
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class="stage"&gt;
+  &lt;div class="phone" id="phone"&gt;
+    &lt;div class="screen" id="screen-select"&gt;
+    &lt;!-- top --&gt;
+    &lt;div class="topbar"&gt;
+      &lt;div class="statusbar"&gt;
+        &lt;span class="time"&gt;12:45&lt;/span&gt;
+        &lt;span class="sysico"&gt;&lt;i class="sig"&gt;&lt;/i&gt;&lt;svg class="wifi" width="16" height="12" viewBox="0 0 16 12" fill="#000"&gt;&lt;path d="M8 10.6 2.1 4.5a8.3 8.3 0 0 1 11.8 0L8 10.6Z"/&gt;&lt;/svg&gt;&lt;i class="bat"&gt;&lt;/i&gt;&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="appbar"&gt;
+        &lt;span class="ic"&gt;&lt;svg width="24" height="24" viewBox="0 0 24 24" fill="none"&gt;&lt;path d="M15 5l-7 7 7 7" stroke="#171a24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/span&gt;
+        &lt;div class="pillwrap"&gt;
+          &lt;div class="pill"&gt;
+            &lt;div class="p1"&gt;신세계백화점 강남점, 인천공항 제 1터미널&lt;/div&gt;
+            &lt;div class="p2"&gt;3.5 오후 14:30&lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;span class="ic ghost"&gt;&lt;svg width="24" height="24" viewBox="0 0 24 24"&gt;&lt;/svg&gt;&lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- scroll body --&gt;
+    &lt;div class="scroll"&gt;
+      &lt;!-- 차량 선택 --&gt;
+      &lt;section class="lineup"&gt;
+        &lt;div class="sec-head"&gt;
+          &lt;div class="t"&gt;차량 선택&lt;/div&gt;
+          &lt;div class="cond"&gt;예약 가능 조건
+            &lt;svg width="18" height="18" viewBox="0 0 18 18" fill="none"&gt;&lt;circle cx="9" cy="9" r="7.25" stroke="#9da0ae" stroke-width="1.4"/&gt;&lt;circle cx="9" cy="5.7" r="1" fill="#9da0ae"/&gt;&lt;rect x="8.15" y="7.7" width="1.7" height="5" rx=".85" fill="#9da0ae"/&gt;&lt;/svg&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="cars"&gt;
+          &lt;div class="carpill sel"&gt;
+            &lt;img src="assets/car-next.png" alt="넥스트" /&gt;
+            &lt;span class="chk"&gt;&lt;svg width="24" height="24" viewBox="0 0 24 24"&gt;&lt;circle cx="12" cy="12" r="12" fill="#0094f9"/&gt;&lt;path d="M7 12.4l3.2 3.2L17 9" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div class="carpill"&gt;&lt;img src="assets/car-plus.png" alt="플러스" /&gt;&lt;/div&gt;
+          &lt;div class="carpill"&gt;&lt;img src="assets/car-vip.png" alt="프리미엄 밴" /&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="title-blk"&gt;
+          &lt;div&gt;
+            &lt;div class="cartitle"&gt;넓고 쾌적한 넥스트&lt;/div&gt;
+            &lt;div class="carprice"&gt;125,000원&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;div class="paxrow"&gt;
+              &lt;svg width="18" height="18" viewBox="0 0 18 18" fill="#60667a"&gt;&lt;circle cx="9" cy="5.2" r="3"/&gt;&lt;path d="M3.2 15c0-3.2 2.6-4.9 5.8-4.9s5.8 1.7 5.8 4.9z"/&gt;&lt;/svg&gt;
+              최대 5인 탑승
+            &lt;/div&gt;
+            &lt;div class="cars-sub"&gt;스타리아・카니발・카니발 하이리무진・시에나 등&lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+
+      &lt;div class="divider"&gt;&lt;/div&gt;
+
+      &lt;!-- 부가 서비스 --&gt;
+      &lt;section class="svc-sec"&gt;
+        &lt;div class="hd"&gt;부가 서비스&lt;/div&gt;
+        &lt;div class="svc-list"&gt;
+          &lt;button class="svc"&gt;
+            &lt;span class="thumb avatar"&gt;&lt;img src="assets/driver.png" alt="드라이버" /&gt;&lt;/span&gt;
+            &lt;span class="body"&gt;
+              &lt;span class="txt"&gt;
+                &lt;span class="n"&gt;드라이버 지정&lt;/span&gt;
+                &lt;span class="d"&gt;N명의 마이 드라이버 중 운행할 드라이버를 지정합니다&lt;/span&gt;
+                &lt;span class="f"&gt;이용료 3,000원&lt;/span&gt;
+              &lt;/span&gt;
+              &lt;span class="chkoff"&gt;&lt;svg width="20" height="20" viewBox="0 0 20 20" fill="none"&gt;&lt;circle cx="10" cy="10" r="9" stroke="#cbced6" stroke-width="1.5"/&gt;&lt;path d="M6 10.2l2.6 2.6L14 7.4" stroke="#cbced6" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/span&gt;
+            &lt;/span&gt;
+          &lt;/button&gt;
+          &lt;button class="svc"&gt;
+            &lt;span class="thumb contain"&gt;&lt;img src="assets/carseat.png" alt="카시트" /&gt;&lt;/span&gt;
+            &lt;span class="body"&gt;
+              &lt;span class="txt"&gt;
+                &lt;span class="n"&gt;카시트 1개&lt;/span&gt;
+                &lt;span class="d"&gt;0세부터 이용하는 카시트 1개&lt;/span&gt;
+                &lt;span class="f"&gt;이용료 5,000원&lt;/span&gt;
+              &lt;/span&gt;
+              &lt;span class="chkoff"&gt;&lt;svg width="20" height="20" viewBox="0 0 20 20" fill="none"&gt;&lt;circle cx="10" cy="10" r="9" stroke="#cbced6" stroke-width="1.5"/&gt;&lt;path d="M6 10.2l2.6 2.6L14 7.4" stroke="#cbced6" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/span&gt;
+            &lt;/span&gt;
+          &lt;/button&gt;
+          &lt;div class="svc-note"&gt;배차 가능한 카시트 차량이 없을 시 예약 취소됩니다&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+
+      &lt;!-- 유의사항 --&gt;
+      &lt;section class="notice"&gt;
+        &lt;div class="grp"&gt;
+          &lt;div class="sub"&gt;
+            &lt;div class="sh"&gt;넥스트/플러스&lt;/div&gt;
+            &lt;div class="bul"&gt;&lt;span class="dot"&gt;•&lt;/span&gt;&lt;span&gt;최종 이동 거리 또는 시간이 예상 이동 거리 또는 시간을 초과하는 경우 추가 요금이 부과될 수 있습니다.&lt;/span&gt;&lt;/div&gt;
+            &lt;div class="bul"&gt;&lt;span class="dot"&gt;•&lt;/span&gt;&lt;span&gt;탑승 예정 시각으로부터 12시간 이내 취소 시, 취소 시점에 따라 수수료가 차등 부과됩니다.&lt;/span&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div class="btns"&gt;
+            &lt;div class="polbtn"&gt;일반 예약 요금 정책 보기 &lt;svg width="14" height="14" viewBox="0 0 14 14" fill="none"&gt;&lt;path d="M5 3l4 4-4 4" stroke="#73788b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/div&gt;
+            &lt;div class="polbtn"&gt;시간 예약 요금 정책 보기 &lt;svg width="14" height="14" viewBox="0 0 14 14" fill="none"&gt;&lt;path d="M5 3l4 4-4 4" stroke="#73788b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="grp"&gt;
+          &lt;div class="sub"&gt;
+            &lt;div class="sh"&gt;프리미엄 밴&lt;/div&gt;
+            &lt;div class="bul"&gt;&lt;span class="dot"&gt;•&lt;/span&gt;&lt;span&gt;최종 이동 거리 또는 시간이 예상 이동 거리 또는 시간을 초과하는 경우 추가 요금이 부과될 수 있습니다.&lt;/span&gt;&lt;/div&gt;
+            &lt;div class="bul"&gt;&lt;span class="dot"&gt;•&lt;/span&gt;&lt;span&gt;탑승 예정 시각으로부터 36시간 이내 취소 시, 취소 시점에 따라 수수료가 차등 부과됩니다.&lt;/span&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div class="btns"&gt;
+            &lt;div class="polbtn"&gt;프리미엄 밴 요금 정책 보기 &lt;svg width="14" height="14" viewBox="0 0 14 14" fill="none"&gt;&lt;path d="M5 3l4 4-4 4" stroke="#73788b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="help"&gt;
+          &lt;div class="l"&gt;
+            &lt;svg width="18" height="18" viewBox="0 0 18 18" fill="none"&gt;&lt;circle cx="9" cy="9" r="8" fill="#9da0ae"/&gt;&lt;rect x="8.2" y="4.4" width="1.6" height="5.6" rx=".8" fill="#fff"/&gt;&lt;circle cx="9" cy="12.6" r="1" fill="#fff"/&gt;&lt;/svg&gt;
+            도움이 필요하신가요?
+          &lt;/div&gt;
+          &lt;div class="r"&gt;고객센터 문의하기&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+    &lt;/div&gt;
+
+    &lt;!-- 넛지 (플로팅) --&gt;
+    &lt;div class="infobar" id="infobar"&gt;
+      &lt;div class="ib-grad"&gt;&lt;div class="ib-shimmer"&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;span class="ib-text"&gt;🔥 이 날은 예약이 평소 대비 &lt;b&gt;2배&lt;/b&gt; 몰리고 있어요&lt;/span&gt;
+    &lt;/div&gt;
+
+    &lt;!-- 하단 영역: ⚡ 띠배너(신규 공존) + 바텀 바 --&gt;
+    &lt;div class="pricewrap"&gt;
+      &lt;div class="tbanner" id="tbanner"&gt;&lt;span&gt;⚡ 넥스트 호출 시 &lt;b&gt;100% 예약 확정&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;
+      &lt;div class="bottom"&gt;
+        &lt;div class="fare"&gt;
+          &lt;div class="l"&gt;예상 요금&lt;/div&gt;
+          &lt;div class="p"&gt;125,000원&lt;/div&gt;
+          &lt;div class="nchip" id="nchip"&gt;&lt;svg width="14" height="14" viewBox="0 0 14 14" fill="none"&gt;&lt;path d="M2.5 7.2l3 3 6-6.5" stroke="#4b5064" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;예약이 몰리는 날&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;button class="next" id="btn-next"&gt;다음&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;/div&gt;&lt;!-- /screen-select --&gt;
+
+    &lt;div class="screen" id="screen-confirm"&gt;
+      &lt;div class="topbar"&gt;
+        &lt;div class="statusbar"&gt;&lt;span class="time"&gt;12:45&lt;/span&gt;
+          &lt;span class="sysico"&gt;&lt;i class="sig"&gt;&lt;/i&gt;&lt;svg class="wifi" width="16" height="12" viewBox="0 0 16 12" fill="#000"&gt;&lt;path d="M8 10.6 2.1 4.5a8.3 8.3 0 0 1 11.8 0L8 10.6Z"/&gt;&lt;/svg&gt;&lt;i class="bat"&gt;&lt;/i&gt;&lt;/span&gt;&lt;/div&gt;
+        &lt;div class="appbar"&gt;
+          &lt;span class="ic" id="cf-back"&gt;&lt;svg width="24" height="24" viewBox="0 0 24 24" fill="none"&gt;&lt;path d="M15 5l-7 7 7 7" stroke="#171a24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class="scroll cf-scroll"&gt;
+        &lt;div class="cf-title"&gt;
+          &lt;div class="cf-tt"&gt;
+            &lt;div class="cf-t1"&gt;넥스트 일반 예약&lt;/div&gt;
+            &lt;div class="cf-t2"&gt;12월 12일 (목) 낮 3시 20분&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;img src="assets/car-next.png" alt="넥스트" class="cf-thumb" /&gt;
+        &lt;/div&gt;
+        &lt;div class="cf-cards"&gt;
+          &lt;!-- 경로 --&gt;
+          &lt;div class="cf-card"&gt;
+            &lt;div class="hd"&gt;&lt;div class="t"&gt;경로&lt;/div&gt;&lt;span class="chip"&gt;48분 예상&lt;/span&gt;&lt;/div&gt;
+            &lt;div class="cf-route"&gt;
+              &lt;div class="cf-row2"&gt;&lt;span class="cf-ic20"&gt;&lt;span class="cf-dot"&gt;&lt;/span&gt;&lt;/span&gt;&lt;div class="a"&gt;위워크 삼성 1호점&lt;/div&gt;&lt;/div&gt;
+              &lt;div class="cf-row2"&gt;&lt;span class="cf-ic20"&gt;&lt;svg width="18" height="18" viewBox="0 0 18 18" fill="none"&gt;&lt;path d="M5 2v14" stroke="#60667a" stroke-width="1.6" stroke-linecap="round"/&gt;&lt;path d="M5 3.2h8.5l-1.7 2.6 1.7 2.6H5z" fill="#60667a"/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;div class="a"&gt;김포공항 국내선&lt;/div&gt;&lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+          &lt;!-- 차량 --&gt;
+          &lt;div class="cf-card"&gt;
+            &lt;div class="hd"&gt;&lt;div class="t"&gt;차량&lt;/div&gt;&lt;span class="chip"&gt;최대 5인&lt;/span&gt;&lt;/div&gt;
+            &lt;div class="cf-row"&gt;&lt;span class="ic"&gt;&lt;svg width="20" height="20" viewBox="0 0 20 20" fill="none"&gt;&lt;path d="M3 12l1.2-3.6A2 2 0 0 1 6.1 7h7.8a2 2 0 0 1 1.9 1.4L17 12v3.2h-2.2V14H5.2v1.2H3z" stroke="#60667a" stroke-width="1.3" stroke-linejoin="round"/&gt;&lt;circle cx="6.3" cy="13" r="1.1" fill="#60667a"/&gt;&lt;circle cx="13.7" cy="13" r="1.1" fill="#60667a"/&gt;&lt;/svg&gt;&lt;/span&gt;
+              &lt;div class="g"&gt;&lt;div class="a"&gt;넓고 쾌적한 넥스트&lt;/div&gt;&lt;div class="b"&gt;스타리아 등&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;!-- 부가 서비스 --&gt;
+          &lt;div class="cf-card"&gt;
+            &lt;div class="hd"&gt;&lt;div class="t"&gt;부가 서비스&lt;/div&gt;&lt;/div&gt;
+            &lt;div class="cf-row"&gt;&lt;span class="ic"&gt;&lt;svg width="20" height="20" viewBox="0 0 20 20" fill="none"&gt;&lt;circle cx="10" cy="10" r="7.5" stroke="#60667a" stroke-width="1.3"/&gt;&lt;path d="M10 6.4v7.2M6.4 10h7.2" stroke="#60667a" stroke-width="1.3" stroke-linecap="round"/&gt;&lt;/svg&gt;&lt;/span&gt;
+              &lt;div class="g"&gt;&lt;div class="a"&gt;드라이버 지정・카시트 1개&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;!-- 탑승자 정보 --&gt;
+          &lt;div class="cf-card"&gt;
+            &lt;div class="hd"&gt;&lt;div class="t"&gt;탑승자 정보&lt;/div&gt;&lt;/div&gt;
+            &lt;div class="cf-row"&gt;&lt;div class="g"&gt;&lt;div class="a"&gt;이지현님&lt;/div&gt;&lt;div class="b"&gt;010 2344 2321&lt;/div&gt;&lt;/div&gt;
+              &lt;span class="cf-arrow"&gt;&lt;svg width="18" height="18" viewBox="0 0 18 18" fill="none"&gt;&lt;path d="M7 4l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;!-- 결제 수단 및 할인 --&gt;
+          &lt;div class="cf-card"&gt;
+            &lt;div class="hd"&gt;&lt;div class="t"&gt;결제 수단 및 할인&lt;/div&gt;&lt;/div&gt;
+            &lt;div class="cf-row"&gt;&lt;span class="ic"&gt;&lt;svg width="20" height="20" viewBox="0 0 20 20" fill="none"&gt;&lt;rect x="2.5" y="5" width="15" height="10" rx="2" stroke="#60667a" stroke-width="1.3"/&gt;&lt;path d="M2.5 8h15" stroke="#60667a" stroke-width="1.3"/&gt;&lt;/svg&gt;&lt;/span&gt;
+              &lt;div class="g"&gt;&lt;div class="a"&gt;하나 ****1234&lt;/div&gt;&lt;/div&gt;
+              &lt;span class="cf-arrow"&gt;&lt;svg width="18" height="18" viewBox="0 0 18 18" fill="none"&gt;&lt;path d="M7 4l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;/div&gt;
+            &lt;div class="cf-div"&gt;&lt;/div&gt;
+            &lt;div class="cf-row"&gt;&lt;span class="ic"&gt;&lt;svg width="20" height="20" viewBox="0 0 20 20" fill="none"&gt;&lt;path d="M3 6.5a1.2 1.2 0 0 1 1.2-1.2h11.6A1.2 1.2 0 0 1 17 6.5v1.8a1.6 1.6 0 0 0 0 3.4v1.8a1.2 1.2 0 0 1-1.2 1.2H4.2A1.2 1.2 0 0 1 3 13.5v-1.8a1.6 1.6 0 0 0 0-3.4z" stroke="#60667a" stroke-width="1.3"/&gt;&lt;/svg&gt;&lt;/span&gt;
+              &lt;div class="g"&gt;&lt;div class="a"&gt;할인 수단 적용하기&lt;/div&gt;&lt;/div&gt;
+              &lt;span class="cf-arrow"&gt;&lt;svg width="18" height="18" viewBox="0 0 18 18" fill="none"&gt;&lt;path d="M7 4l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;/div&gt;
+            &lt;div class="cf-note2"&gt;예약 시 할인 전 금액으로 선결제하며, 하차 시 할인 적용된 최종 금액으로 자동 재결제합니다.&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;!-- 예상 요금 --&gt;
+          &lt;div class="cf-card"&gt;
+            &lt;div class="cf-fare"&gt;
+              &lt;div class="cf-fr"&gt;&lt;span&gt;운행 요금&lt;/span&gt;&lt;span&gt;120,000원&lt;/span&gt;&lt;/div&gt;
+              &lt;div class="cf-frnote"&gt;* 탄력요금 1.2배 적용됨&lt;/div&gt;
+              &lt;div class="cf-fr"&gt;&lt;span&gt;부가 서비스 이용료&lt;/span&gt;&lt;span&gt;10,000원&lt;/span&gt;&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class="cf-div"&gt;&lt;/div&gt;
+            &lt;div class="cf-total"&gt;&lt;span&gt;총 예상 요금&lt;/span&gt;&lt;span class="amt"&gt;90,000원&lt;/span&gt;&lt;/div&gt;
+            &lt;div class="cf-msgwrap"&gt;&lt;div class="cf-msg"&gt;
+              &lt;svg width="20" height="20" viewBox="0 0 20 20" fill="none"&gt;&lt;circle cx="10" cy="10" r="8" fill="#0094f9"/&gt;&lt;circle cx="10" cy="6.5" r="1.1" fill="#fff"/&gt;&lt;rect x="9.1" y="8.6" width="1.8" height="5.4" rx=".9" fill="#fff"/&gt;&lt;/svg&gt;
+              예약 접수비는 무료에요&lt;/div&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;!-- 요청사항 --&gt;
+          &lt;div class="cf-card"&gt;
+            &lt;div class="hd cf-reqhd"&gt;&lt;div class="t2"&gt;요청사항&lt;span class="opt"&gt;(선택)&lt;/span&gt;&lt;/div&gt;
+              &lt;span class="cf-bag"&gt;수하물 안내 &lt;svg width="18" height="18" viewBox="0 0 18 18" fill="none"&gt;&lt;circle cx="9" cy="9" r="7.25" stroke="#868b9c" stroke-width="1.3"/&gt;&lt;circle cx="9" cy="5.7" r="1" fill="#868b9c"/&gt;&lt;rect x="8.2" y="7.7" width="1.6" height="5" rx=".8" fill="#868b9c"/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;/div&gt;
+            &lt;div class="cf-row cf-reqrow"&gt;&lt;div class="g"&gt;&lt;div class="ph"&gt;예 : 24인치 캐리어와 골프백이 2개 있어요&lt;/div&gt;&lt;/div&gt;
+              &lt;span class="cf-arrow"&gt;&lt;svg width="18" height="18" viewBox="0 0 18 18" fill="none"&gt;&lt;path d="M7 4l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/span&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div class="cf-presets"&gt;
+            &lt;div class="cf-preset"&gt;&lt;div class="p"&gt;초등학생 3명 하굣길입니다. 경유지에서 2명 내리고 목적지에서 1명 하차 예정입니다.&lt;/div&gt;&lt;button class="cf-inputbtn"&gt;입력&lt;/button&gt;&lt;/div&gt;
+            &lt;div class="cf-preset"&gt;&lt;div class="p"&gt;초등학생 3명 하굣길입니다.&lt;/div&gt;&lt;button class="cf-inputbtn"&gt;입력&lt;/button&gt;&lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class="cf-infobar"&gt;&lt;span&gt;🔥 이 날은 예약이 평소 대비 &lt;b&gt;2배&lt;/b&gt; 몰리고 있어요&lt;/span&gt;&lt;/div&gt;
+      &lt;div class="cf-bottom"&gt;
+        &lt;div class="fare"&gt;&lt;div class="l"&gt;예상 요금&lt;/div&gt;&lt;div class="p"&gt;125,000원&lt;/div&gt;&lt;/div&gt;
+        &lt;button class="next"&gt;예약하기&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;&lt;!-- /screen-confirm --&gt;
+  &lt;/div&gt;
+
+  &lt;aside class="panel" id="panel"&gt;
+    &lt;div class="grab"&gt;&lt;/div&gt;
+    &lt;h1&gt;넛지 배너 · 구현 비교&lt;/h1&gt;
+    &lt;p class="sub"&gt;기존(넛지 단독) vs 신규(⚡ 100% 예약 확정 띠배너와 공존).&lt;/p&gt;
+    &lt;div class="grp2"&gt;
+      &lt;label&gt;구현 버전&lt;/label&gt;
+      &lt;div class="seg" id="impl"&gt;
+        &lt;button data-i="legacy"&gt;기존&lt;/button&gt;
+        &lt;button data-i="coexist" class="on"&gt;신규(공존)&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="grp2"&gt;
+      &lt;label&gt;100% 예약 확정 조건 (신규)&lt;/label&gt;
+      &lt;div class="seg" id="cond100"&gt;
+        &lt;button data-c="1" class="on"&gt;있음&lt;/button&gt;
+        &lt;button data-c="0"&gt;없음&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;button class="replay" id="replay"&gt;▶ 다시 재생&lt;/button&gt;
+    &lt;div class="tl" id="tl"&gt;&lt;/div&gt;
+  &lt;/aside&gt;
+&lt;/div&gt;
+
+&lt;div class="scrim" id="scrim"&gt;&lt;/div&gt;
+&lt;button class="replay-fab" id="replayFab" aria-label="다시 재생"&gt;↻&lt;/button&gt;
+&lt;button class="fab" id="fab" aria-label="컨트롤 열기"&gt;⚙&lt;/button&gt;
+
+&lt;script&gt;
+  const bar = document.getElementById('infobar');
+  const tbanner = document.getElementById('tbanner');
+  const nchip = document.getElementById('nchip');
+  const tlEl = document.getElementById('tl');
+  let impl='coexist', cond100=true, speed=0.75, disarmDock=null, morphTimer=null, armTimer=null;
+
+  function applySpeed(){
+    document.documentElement.style.setProperty('--dock-dur',(0.42/speed)+'s');
+    document.documentElement.style.setProperty('--grad-dur',(1.6/speed)+'s');
+  }
+  const TL={
+    legacy:'① 진입: 바텀 뒤 슬라이드업 → 도킹 → 플로팅&lt;br&gt;② 화면 터치·스크롤 시 blue-50 띠배너로 도킹',
+    coexist:'① 진입: 플로팅 (⚡ 띠배너·칩 숨김)&lt;br&gt;② 3초 후 스크롤 → 플로팅이 ‘✓ 예약이 몰리는 날’ 칩으로 모프&lt;br&gt;③ 이어서 ⚡ 100% 예약 확정 띠배너 상승&lt;br&gt;④ 칩 클릭 → 역순으로 플로팅 배너 복귀'
+  };
+  function setTL(){ tlEl.innerHTML='&lt;b&gt;동작&lt;/b&gt;&lt;br&gt;'+TL[impl]; }
+  function clearTimers(){ clearTimeout(morphTimer); clearTimeout(armTimer); if(disarmDock){disarmDock();disarmDock=null;} }
+
+  function resetBase(){                                 // 바텀 바 뒤 시작 상태로 리셋
+    clearTimers();
+    bar.classList.remove('floating');
+    bar.style.transition='none'; bar.style.opacity='1'; bar.style.visibility='visible';
+    bar.style.transform='translateY(74px)'; bar.style.transformOrigin='';
+    tbanner.classList.remove('show'); nchip.classList.remove('show');
+    void bar.offsetWidth;
+  }
+  function armInteraction(cb, scrollOnly){              // 첫 상호작용에 1회 콜백
+    if(disarmDock) disarmDock();
+    const scroller=document.querySelector('.scroll'), phone=document.querySelector('.phone');
+    const trigger=()=&gt;{ disarm(); cb(); };
+    function disarm(){ scroller.removeEventListener('scroll',trigger); scroller.removeEventListener('wheel',trigger); phone.removeEventListener('pointerdown',trigger); disarmDock=null; }
+    scroller.addEventListener('scroll',trigger,{passive:true,once:true});
+    scroller.addEventListener('wheel',trigger,{passive:true,once:true});
+    if(!scrollOnly) phone.addEventListener('pointerdown',trigger,{once:true});
+    disarmDock=disarm;
+  }
+
+  function dockLegacy(){ bar.classList.remove('floating'); }   // 기존: blue-50 스트립
+
+  function dockCoexist(){                               // 신규: 플로팅 → ✓칩 모프 → ⚡띠배너 상승
+    nchip.style.transition='none'; nchip.classList.add('show');   // 칩 최종 위치 사전 측정
+    const to=nchip.getBoundingClientRect();
+    nchip.classList.remove('show'); void nchip.offsetWidth; nchip.style.transition='';
+    const from=bar.getBoundingClientRect();
+    const dx=(to.left+to.width/2)-(from.left+from.width/2);
+    const dy=(to.top+to.height/2)-(from.top+from.height/2);
+    const sc=Math.max(to.width/from.width,.06);
+    bar.style.transition='transform .42s cubic-bezier(.4,0,.2,1),opacity .32s ease';
+    bar.style.transformOrigin='center center';
+    setTimeout(()=&gt;{                                    // rAF 대신 setTimeout (백그라운드 탭 rAF 정지 대비)
+      bar.style.transform='translate('+dx+'px,'+dy+'px) scale('+sc+')';
+      bar.style.opacity='0';
+      nchip.classList.add('show');                     // 칩 등장
+    }, 20);
+    morphTimer=setTimeout(()=&gt;{
+      bar.style.visibility='hidden';
+      if(cond100) tbanner.classList.add('show');        // ⚡ 띠배너 상승
+    }, 470);
+  }
+
+  function undockCoexist(){                             // 칩 클릭 → 도킹 역순으로 플로팅 복귀
+    if(impl!=='coexist' || !nchip.classList.contains('show')) return;
+    clearTimers();
+    tbanner.classList.remove('show');                   // ⚡ 띠배너 하강
+    const from=nchip.getBoundingClientRect();           // 시작: 칩 위치
+    bar.style.transition='none';                        // 끝: 플로팅 레이아웃 위치 측정
+    bar.style.transform='translateY(0)'; bar.style.opacity='0';
+    void bar.offsetWidth;
+    const to=bar.getBoundingClientRect();
+    const dx=(from.left+from.width/2)-(to.left+to.width/2);
+    const dy=(from.top+from.height/2)-(to.top+to.height/2);
+    const sc=Math.max(from.width/to.width,.06);
+    bar.style.transformOrigin='center center';          // 칩 위치에 축소·투명 상태로 배치
+    bar.style.transform='translate('+dx+'px,'+dy+'px) scale('+sc+')';
+    bar.style.visibility='visible';
+    void bar.offsetWidth;
+    nchip.classList.remove('show');                     // 칩 사라짐
+    bar.style.transition='transform .42s cubic-bezier(.4,0,.2,1),opacity .32s ease';
+    setTimeout(()=&gt;{                                     // 플로팅으로 확대·페이드인 (setTimeout: 백그라운드 rAF 대비)
+      bar.style.transform='translateY(0)'; bar.style.opacity='1';
+    }, 20);
+    morphTimer=setTimeout(()=&gt;{                          // 복귀 후 재도킹 재무장
+      bar.style.transition=''; bar.style.transformOrigin='';
+      armTimer=setTimeout(()=&gt;armInteraction(dockCoexist,true), 3000);
+    }, 470);
+  }
+  nchip.addEventListener('click', undockCoexist);
+
+  function play(){
+    resetBase(); setTL();
+    bar.style.transition=''; bar.style.transform='translateY(0)';   // 슬라이드업
+    if(impl==='legacy'){
+      morphTimer=setTimeout(()=&gt;{ bar.classList.add('floating'); armInteraction(dockLegacy,false); }, (420+160)/speed);
+    } else {
+      bar.classList.add('floating');                    // 신규: 바로 플로팅으로 상승
+      armTimer=setTimeout(()=&gt;armInteraction(dockCoexist,true), 3000);   // 3초 후 스크롤 도킹
+    }
+  }
+
+  document.getElementById('impl').addEventListener('click',e=&gt;{const b=e.target.closest('button');if(!b)return;
+    impl=b.dataset.i; document.querySelectorAll('#impl button').forEach(x=&gt;x.classList.toggle('on',x===b)); play();});
+  document.getElementById('cond100').addEventListener('click',e=&gt;{const b=e.target.closest('button');if(!b)return;
+    cond100=b.dataset.c==='1'; document.querySelectorAll('#cond100 button').forEach(x=&gt;x.classList.toggle('on',x===b)); play();});
+  document.getElementById('replay').addEventListener('click',play);
+  document.getElementById('replayFab').addEventListener('click',play);
+
+  const panel=document.getElementById('panel'), scrim=document.getElementById('scrim');
+  document.getElementById('fab').addEventListener('click',()=&gt;{panel.classList.add('open');scrim.classList.add('open');});
+  scrim.addEventListener('click',()=&gt;{panel.classList.remove('open');scrim.classList.remove('open');});
+
+  // 화면 전환: 다음 → 예약확인 / 뒤로 → 차량선택(애니메이션 재생)
+  const phoneEl=document.getElementById('phone');
+  document.getElementById('btn-next').addEventListener('click',()=&gt;{
+    document.querySelector('#screen-confirm .cf-scroll').scrollTop=0;
+    phoneEl.classList.add('show-confirm');
+  });
+  document.getElementById('cf-back').addEventListener('click',()=&gt;{
+    resetBase();                          // 슬라이드 인 동안 바텀 바 뒤에 숨김
+    phoneEl.classList.remove('show-confirm');
+    setTimeout(play, 380);                // 슬라이드 인 후 재생
+  });
+
+  applySpeed();
+  window.addEventListener('load',()=&gt;setTimeout(play,400));
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre></div>
+      </section>
     </main>
   </div>
 
@@ -447,11 +1178,19 @@
     document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x===b));
     document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.dataset.p===b.dataset.p));});
 
-  // copy buttons
+  // copy buttons (clipboard API + execCommand 폴백)
   document.querySelectorAll('.copy').forEach(btn=>btn.addEventListener('click',()=>{
     const code=btn.closest('.codewrap').querySelector('pre code');
-    navigator.clipboard.writeText(code.innerText).then(()=>{btn.textContent='복사됨';btn.classList.add('done');
-      setTimeout(()=>{btn.textContent='복사';btn.classList.remove('done');},1400);});
+    const text=code.innerText;
+    const ok=()=>{btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(()=>{btn.textContent='복사';btn.classList.remove('done');},1400);};
+    const fallback=()=>{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}ta.remove();ok();};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      let settled=false; const done=fn=>{if(!settled){settled=true;fn();}};
+      navigator.clipboard.writeText(text).then(()=>done(ok)).catch(()=>done(fallback));
+      setTimeout(()=>done(fallback),250);   // 포커스 없어 promise가 매달릴 때 대비
+    } else{fallback();}
   }));
 
   // rail active on scroll
