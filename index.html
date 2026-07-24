@@ -138,15 +138,17 @@
     overflow:hidden;max-height:0;opacity:0;transition:max-height var(--dock-dur) cubic-bezier(.4,0,.2,1),opacity .3s ease;}
   .tbanner b{color:var(--blue-600);font-weight:700;}
   .tbanner.show{max-height:40px;opacity:1;}
+  /* 고정 높이(=Figma 92px 컨테이너). 칩 유무와 무관하게 컨테이너 높이 불변, align-center로 요금블록만 재정렬 */
   .bottom{background:#fff;display:flex;align-items:center;justify-content:space-between;gap:20px;
-    padding:20px 24px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));}
+    box-sizing:border-box;height:calc(92px + env(safe-area-inset-bottom,0px));
+    padding:0 24px;padding-bottom:env(safe-area-inset-bottom,0px);}
   .bottom .fare{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;}
   .bottom .fare .l{font-size:13px;line-height:18px;color:#000;}
   .bottom .fare .p{font-size:16px;line-height:24px;font-weight:700;color:#000;margin-top:2px;}
   .nchip{display:inline-flex;align-items:center;gap:4px;background:var(--gray-30);color:var(--gray-700);
-    border-radius:9999px;padding:4px 10px 4px 6px;font-size:13px;line-height:18px;white-space:nowrap;
-    overflow:hidden;max-height:0;opacity:0;margin-top:0;transition:max-height .3s ease,opacity .28s ease,margin-top .3s ease;}
-  .nchip.show{max-height:26px;opacity:1;margin-top:6px;}
+    border-radius:9999px;padding:0 10px 0 6px;font-size:13px;line-height:18px;white-space:nowrap;
+    overflow:hidden;max-height:0;opacity:0;margin-top:0;transition:max-height .3s ease,opacity .28s ease,margin-top .3s ease,padding .3s ease;}
+  .nchip.show{max-height:26px;opacity:1;margin-top:6px;padding:4px 10px 4px 6px;}
   .bottom .next{width:120px;background:var(--navy);color:#fff;font-size:16px;line-height:24px;font-weight:700;
     border:none;border-radius:4px;padding:14px 18px;flex:0 0 auto;}
 
