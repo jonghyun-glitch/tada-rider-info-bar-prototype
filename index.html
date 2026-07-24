@@ -132,12 +132,21 @@
   @media (prefers-reduced-motion:reduce){.infobar.floating .ib-shimmer{animation:none;}}
 
   /* bottom price area */
-  .bottom{position:absolute;left:0;right:0;bottom:0;background:#fff;z-index:5;
-    box-shadow:0 -8px 8px rgba(25,37,77,.08);
-    display:flex;align-items:center;justify-content:space-between;gap:20px;
+  .pricewrap{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;flex-direction:column;box-shadow:0 -8px 8px rgba(25,37,77,.08);}
+  .tbanner{background:var(--blue-50);display:flex;align-items:center;justify-content:center;gap:4px;
+    padding:10px 12px;font-size:13px;line-height:18px;color:var(--gray-800);white-space:nowrap;
+    overflow:hidden;max-height:0;opacity:0;transition:max-height var(--dock-dur) cubic-bezier(.4,0,.2,1),opacity .3s ease;}
+  .tbanner b{color:var(--blue-600);font-weight:700;}
+  .tbanner.show{max-height:40px;opacity:1;}
+  .bottom{background:#fff;display:flex;align-items:center;justify-content:space-between;gap:20px;
     padding:20px 24px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));}
+  .bottom .fare{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;}
   .bottom .fare .l{font-size:13px;line-height:18px;color:#000;}
   .bottom .fare .p{font-size:16px;line-height:24px;font-weight:700;color:#000;margin-top:2px;}
+  .nchip{display:inline-flex;align-items:center;gap:4px;background:var(--gray-30);color:var(--gray-700);
+    border-radius:9999px;padding:4px 10px 4px 6px;font-size:13px;line-height:18px;white-space:nowrap;
+    overflow:hidden;max-height:0;opacity:0;margin-top:0;transition:max-height .3s ease,opacity .28s ease,margin-top .3s ease;}
+  .nchip.show{max-height:26px;opacity:1;margin-top:6px;}
   .bottom .next{width:120px;background:var(--navy);color:#fff;font-size:16px;line-height:24px;font-weight:700;
     border:none;border-radius:4px;padding:14px 18px;flex:0 0 auto;}
 
@@ -350,16 +359,23 @@
       </section>
     </div>
 
-    <!-- info bar -->
+    <!-- 넛지 (플로팅) -->
     <div class="infobar" id="infobar">
       <div class="ib-grad"><div class="ib-shimmer"></div></div>
       <span class="ib-text">🔥 이 날은 예약이 평소 대비 <b>2배</b> 몰리고 있어요</span>
     </div>
 
-    <!-- bottom price -->
-    <div class="bottom">
-      <div class="fare"><div class="l">예상 요금</div><div class="p">125,000원</div></div>
-      <button class="next" id="btn-next">다음</button>
+    <!-- 하단 영역: ⚡ 띠배너(신규 공존) + 바텀 바 -->
+    <div class="pricewrap">
+      <div class="tbanner" id="tbanner"><span>⚡ 넥스트 호출 시 <b>100% 예약 확정</b></span></div>
+      <div class="bottom">
+        <div class="fare">
+          <div class="l">예상 요금</div>
+          <div class="p">125,000원</div>
+          <div class="nchip" id="nchip"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.2l3 3 6-6.5" stroke="#4b5064" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>예약이 몰리는 날</div>
+        </div>
+        <button class="next" id="btn-next">다음</button>
+      </div>
     </div>
     </div><!-- /screen-select -->
 
@@ -454,58 +470,24 @@
 
   <aside class="panel" id="panel">
     <div class="grab"></div>
-    <h1>하단 띠배너 플로팅 강조</h1>
-    <p class="sub">화면 진입 시 플로팅으로 등장·유지 → 화면을 터치/스크롤하면 도킹.</p>
+    <h1>넛지 배너 · 구현 비교</h1>
+    <p class="sub">기존(넛지 단독) vs 신규(⚡ 100% 예약 확정 띠배너와 공존).</p>
     <div class="grp2">
-      <label>버전 (넛지 위계·타이포)</label>
-      <div class="seg" id="version">
-        <button data-v="cur">현재</button>
-        <button data-v="adj" class="on">조정</button>
+      <label>구현 버전</label>
+      <div class="seg" id="impl">
+        <button data-i="legacy">기존</button>
+        <button data-i="coexist" class="on">신규(공존)</button>
       </div>
     </div>
     <div class="grp2">
-      <label>속도</label>
-      <div class="seg" id="speed">
-        <button data-speed="0.75" class="on">0.75x</button>
-        <button data-speed="1">1x</button>
-        <button data-speed="1.5">1.5x</button>
-      </div>
-    </div>
-    <div class="grp2">
-      <label>코너</label>
-      <div class="seg" id="corner">
-        <button data-r="9999">캡슐</button>
-        <button data-r="12">라운드 12</button>
-        <button data-r="8" class="on">라운드 8</button>
-      </div>
-    </div>
-    <div class="grp2">
-      <label>사이드 마진(좌우)</label>
-      <div class="seg" id="sidem">
-        <button data-m="16" class="on">16</button>
-        <button data-m="24">24</button>
-        <button data-m="32">32</button>
-      </div>
-    </div>
-    <div class="grp2">
-      <label>하단 마진</label>
-      <div class="seg" id="botm">
-        <button data-m="16" class="on">16</button>
-        <button data-m="20">20</button>
-        <button data-m="24">24</button>
-      </div>
-    </div>
-    <div class="grp2">
-      <label>쉬머(흰색 하이라이트)</label>
-      <div class="seg" id="shimmer">
-        <button data-s="sharp">선명</button>
-        <button data-s="default">기본</button>
-        <button data-s="mid" class="on">중간</button>
-        <button data-s="soft">은은·넓게</button>
+      <label>100% 예약 확정 조건 (신규)</label>
+      <div class="seg" id="cond100">
+        <button data-c="1" class="on">있음</button>
+        <button data-c="0">없음</button>
       </div>
     </div>
     <button class="replay" id="replay">▶ 다시 재생</button>
-    <div class="tl"><b>동작</b><br>① 진입: 도킹 → 플로팅 전환<br>② 플로팅 유지 · 쉬머 반복<br>③ 화면 터치·스크롤 시 도킹</div>
+    <div class="tl" id="tl"></div>
   </aside>
 </div>
 
@@ -515,93 +497,81 @@
 
 <script>
   const bar = document.getElementById('infobar');
-  let mode='B', speed=0.75, curEntrance=null, disarmDock=null, morphTimer=null, armTimer=null;
+  const tbanner = document.getElementById('tbanner');
+  const nchip = document.getElementById('nchip');
+  const tlEl = document.getElementById('tl');
+  let impl='coexist', cond100=true, speed=0.75, disarmDock=null, morphTimer=null, armTimer=null;
+
   function applySpeed(){
     document.documentElement.style.setProperty('--dock-dur',(0.42/speed)+'s');
     document.documentElement.style.setProperty('--grad-dur',(1.6/speed)+'s');
   }
-  function dock(){
-    if(disarmDock){ disarmDock(); disarmDock=null; }
-    bar.classList.remove('floating');   // 플로팅 → 도킹
-  }
-  // 플로팅 유지 상태에서, 첫 사용자 상호작용(터치/클릭/스크롤/휠)에 도킹
-  function armDock(){
-    if(disarmDock) disarmDock();
-    const scroller=document.querySelector('.scroll');
-    const phone=document.querySelector('.phone');
-    const trigger=()=>dock();
-    scroller.addEventListener('scroll',trigger,{passive:true,once:true});
-    phone.addEventListener('pointerdown',trigger,{once:true});
-    phone.addEventListener('wheel',trigger,{passive:true,once:true});
-    disarmDock=()=>{
-      scroller.removeEventListener('scroll',trigger);
-      phone.removeEventListener('pointerdown',trigger);
-      phone.removeEventListener('wheel',trigger);
-    };
-  }
-  // 매 진입: 바텀 바 뒤(아래)에서 슬라이드 업 → 도킹 → 플로팅 모프. 첫 진입/복귀 동일.
-  function resetBehind(){                              // 바텀 바 뒤에 숨긴 시작 상태
-    if(disarmDock){ disarmDock(); disarmDock=null; }
-    clearTimeout(morphTimer); clearTimeout(armTimer);
+  const TL={
+    legacy:'① 진입: 바텀 뒤 슬라이드업 → 도킹 → 플로팅<br>② 화면 터치·스크롤 시 blue-50 띠배너로 도킹',
+    coexist:'① 진입: 플로팅 (⚡ 띠배너·칩 숨김)<br>② 3초 후 스크롤 → 플로팅이 ‘✓ 예약이 몰리는 날’ 칩으로 모프<br>③ 이어서 ⚡ 100% 예약 확정 띠배너 상승'
+  };
+  function setTL(){ tlEl.innerHTML='<b>동작</b><br>'+TL[impl]; }
+  function clearTimers(){ clearTimeout(morphTimer); clearTimeout(armTimer); if(disarmDock){disarmDock();disarmDock=null;} }
+
+  function resetBase(){                                 // 바텀 바 뒤 시작 상태로 리셋
+    clearTimers();
     bar.classList.remove('floating');
-    bar.style.transition='none'; bar.style.opacity='1'; bar.style.transform='translateY(74px)';
+    bar.style.transition='none'; bar.style.opacity='1'; bar.style.visibility='visible';
+    bar.style.transform='translateY(74px)'; bar.style.transformOrigin='';
+    tbanner.classList.remove('show'); nchip.classList.remove('show');
     void bar.offsetWidth;
   }
-  function play(){
-    resetBehind();
-    bar.style.transition='';                          // CSS 트랜지션 복원(transform 포함)
-    bar.style.transform='translateY(0)';              // 도킹 위치로 슬라이드 업
-    morphTimer=setTimeout(()=>{
-      bar.classList.add('floating');                  // 도킹 → 플로팅
-      armTimer=setTimeout(armDock,(0.42/speed)*1000+80);
-    }, (420+160)/speed);
+  function armInteraction(cb, scrollOnly){              // 첫 상호작용에 1회 콜백
+    if(disarmDock) disarmDock();
+    const scroller=document.querySelector('.scroll'), phone=document.querySelector('.phone');
+    const trigger=()=>{ disarm(); cb(); };
+    function disarm(){ scroller.removeEventListener('scroll',trigger); scroller.removeEventListener('wheel',trigger); phone.removeEventListener('pointerdown',trigger); disarmDock=null; }
+    scroller.addEventListener('scroll',trigger,{passive:true,once:true});
+    scroller.addEventListener('wheel',trigger,{passive:true,once:true});
+    if(!scrollOnly) phone.addEventListener('pointerdown',trigger,{once:true});
+    disarmDock=disarm;
   }
-  document.getElementById('speed').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;speed=parseFloat(b.dataset.speed);document.querySelectorAll('#speed button').forEach(x=>x.classList.toggle('on',x===b));applySpeed();play();});
+
+  function dockLegacy(){ bar.classList.remove('floating'); }   // 기존: blue-50 스트립
+
+  function dockCoexist(){                               // 신규: 플로팅 → ✓칩 모프 → ⚡띠배너 상승
+    nchip.style.transition='none'; nchip.classList.add('show');   // 칩 최종 위치 사전 측정
+    const to=nchip.getBoundingClientRect();
+    nchip.classList.remove('show'); void nchip.offsetWidth; nchip.style.transition='';
+    const from=bar.getBoundingClientRect();
+    const dx=(to.left+to.width/2)-(from.left+from.width/2);
+    const dy=(to.top+to.height/2)-(from.top+from.height/2);
+    const sc=Math.max(to.width/from.width,.06);
+    bar.style.transition='transform .42s cubic-bezier(.4,0,.2,1),opacity .32s ease';
+    bar.style.transformOrigin='center center';
+    requestAnimationFrame(()=>{
+      bar.style.transform='translate('+dx+'px,'+dy+'px) scale('+sc+')';
+      bar.style.opacity='0';
+      nchip.classList.add('show');                     // 칩 등장
+    });
+    morphTimer=setTimeout(()=>{
+      bar.style.visibility='hidden';
+      if(cond100) tbanner.classList.add('show');        // ⚡ 띠배너 상승
+    }, 470);
+  }
+
+  function play(){
+    resetBase(); setTL();
+    bar.style.transition=''; bar.style.transform='translateY(0)';   // 슬라이드업
+    if(impl==='legacy'){
+      morphTimer=setTimeout(()=>{ bar.classList.add('floating'); armInteraction(dockLegacy,false); }, (420+160)/speed);
+    } else {
+      bar.classList.add('floating');                    // 신규: 바로 플로팅으로 상승
+      armTimer=setTimeout(()=>armInteraction(dockCoexist,true), 3000);   // 3초 후 스크롤 도킹
+    }
+  }
+
+  document.getElementById('impl').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    impl=b.dataset.i; document.querySelectorAll('#impl button').forEach(x=>x.classList.toggle('on',x===b)); play();});
+  document.getElementById('cond100').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    cond100=b.dataset.c==='1'; document.querySelectorAll('#cond100 button').forEach(x=>x.classList.toggle('on',x===b)); play();});
   document.getElementById('replay').addEventListener('click',play);
   document.getElementById('replayFab').addEventListener('click',play);
-
-  // 코너 레디우스 (캡슐 9999 ↔ 라운드 12)
-  document.getElementById('corner').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-    document.querySelectorAll('#corner button').forEach(x=>x.classList.toggle('on',x===b));
-    document.documentElement.style.setProperty('--float-radius',b.dataset.r+'px');play();});
-  // 쉬머 조절 (너비/피크opacity/이동거리)
-  const SHIM={
-    sharp:{w:'60px',peak:'.45',x0:'-90px',x1:'440px'},
-    default:{w:'90px',peak:'.35',x0:'-120px',x1:'460px'},
-    mid:{w:'155px',peak:'.25',x0:'-190px',x1:'500px'},
-    soft:{w:'220px',peak:'.16',x0:'-260px',x1:'540px'}
-  };
-  document.getElementById('shimmer').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-    document.querySelectorAll('#shimmer button').forEach(x=>x.classList.toggle('on',x===b));
-    const c=SHIM[b.dataset.s], r=document.documentElement.style;
-    r.setProperty('--shim-w',c.w);r.setProperty('--shim-peak',c.peak);r.setProperty('--shim-x0',c.x0);r.setProperty('--shim-x1',c.x1);
-    play();});
-  // 마진 조절
-  document.getElementById('sidem').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-    document.querySelectorAll('#sidem button').forEach(x=>x.classList.toggle('on',x===b));
-    document.documentElement.style.setProperty('--float-side',b.dataset.m+'px');play();});
-  document.getElementById('botm').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-    document.querySelectorAll('#botm button').forEach(x=>x.classList.toggle('on',x===b));
-    document.documentElement.style.setProperty('--float-gap',b.dataset.m+'px');play();});
-  // 버전 프리셋: 현재 vs 조정(위계·타이포 개선)
-  function setSeg(id,attr,val){document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x.dataset[attr]===val));}
-  const VER={
-    cur:{r:'9999',side:'16',bot:'24',shim:'mid',fs:'17px',fw:'500'},
-    adj:{r:'8',   side:'16',bot:'16',shim:'mid',fs:'15px',fw:'400'}
-  };
-  function applyVersion(v){
-    const c=VER[v], rs=document.documentElement.style, s=SHIM[c.shim];
-    rs.setProperty('--float-radius',c.r+'px');
-    rs.setProperty('--float-side',c.side+'px');
-    rs.setProperty('--float-gap',c.bot+'px');
-    rs.setProperty('--shim-w',s.w);rs.setProperty('--shim-peak',s.peak);rs.setProperty('--shim-x0',s.x0);rs.setProperty('--shim-x1',s.x1);
-    rs.setProperty('--fl-fs',c.fs);rs.setProperty('--fl-fw',c.fw);
-    setSeg('corner','r',c.r);setSeg('sidem','m',c.side);setSeg('botm','m',c.bot);setSeg('shimmer','s',c.shim);
-    play();
-  }
-  document.getElementById('version').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-    document.querySelectorAll('#version button').forEach(x=>x.classList.toggle('on',x===b));
-    applyVersion(b.dataset.v);});
 
   const panel=document.getElementById('panel'), scrim=document.getElementById('scrim');
   document.getElementById('fab').addEventListener('click',()=>{panel.classList.add('open');scrim.classList.add('open');});
@@ -614,9 +584,9 @@
     phoneEl.classList.add('show-confirm');
   });
   document.getElementById('cf-back').addEventListener('click',()=>{
-    resetBehind();                        // 슬라이드 인 동안 바텀 바 뒤에 숨김
+    resetBase();                          // 슬라이드 인 동안 바텀 바 뒤에 숨김
     phoneEl.classList.remove('show-confirm');
-    setTimeout(play, 380);                // 슬라이드 인 후 슬라이드업→모프
+    setTimeout(play, 380);                // 슬라이드 인 후 재생
   });
 
   applySpeed();
